@@ -1,6 +1,6 @@
 #!/user/local/awk -f
 
-# $Header: /home/kst/calc/calc,v 1.6 1993-04-28 18:20:06-07 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.7 1993-05-25 20:22:34-07 kst Exp $
 
 #
 # currently valid stack runs from 1 to tos inclusive
@@ -9,12 +9,12 @@
 function pop()
 {
     return stack[tos--]
-}
+} # end pop
 
 function push(item)
 {
     stack[++tos] = item
-}
+} # end push
 
 function dump()
 {
@@ -27,7 +27,7 @@ function dump()
     else {
 	print "  <empty stack>"
     }
-}
+} # end dump
 
 function show_vars()
 {
@@ -35,7 +35,7 @@ function show_vars()
 	printf("%-8s = ", name);
 	print(variables[name])
     }
-}
+} # end show_vars
 
 function numeric(x)
 {
@@ -50,37 +50,38 @@ function numeric(x)
     else {
 	return 1
     }
-}
+} # end numeric
 
 function help()
 {
-    print "    +-*/%^:     arithmetic operators"
-    print "    **:         synonym for ^"
-    print "    --:         negate"
-    print "    //:         reciprocal"
-    print "    dup:        duplicate top of stack (tos)"
-    print "    drop:       drop tos"
-    print "    clear:      clear stack"
-    print "    swap:       swap top two stack elements"
+    print "    +-*/%^    : arithmetic operators"
+    print "    **        : synonym for ^"
+    print "    --        : negate"
+    print "    //        : reciprocal"
+    print "    dup       : duplicate top of stack (tos)"
+    print "    drop      : drop tos"
+    print "    clear     : clear stack"
+    print "    swap      : swap top two stack elements"
     print "    sin, cos, tan, asin, acos, atan:"
     print "                trig functions (radians)"
-    print "    atan2:      atan(y/x)"
-    print "    exp:        e^x"
-    print "    ln:         log base e"
-    print "    log:        log base 10"
-    print "    int:        integer part (truncate towards 0)"
-    print "    srand:      set random seed"
-    print "    srandx:     set random seed to specified value"
-    print "    rand:       random number"
-    print "    sqrt:       square root"
-    print "    vars:       show all variables"
-    print "    <name>=:    assign variable"
-    print "    ofmt=:      show output format"
+    print "    atan2     : atan(y/x)"
+    print "    exp       : e^x"
+    print "    ln        : log base e"
+    print "    log       : log base 10"
+    print "    int       : integer part (truncate towards 0)"
+    print "    srand     : set random seed"
+    print "    srandx    : set random seed to specified value"
+    print "    rand      : random number"
+    print "    sqrt      : square root"
+    print "    vars      : show all variables"
+    print "    <name>=   : assign variable"
+    print "    ofmt=     : show output format"
     print "    ofmt=<fmt>: set output format"
-    print "    .:          display tos"
-    print "    ,:          dump stack"
-    print "    \\:          inhibit stack dump"
-}
+    print "    .         : display tos"
+    print "    ,         : dump stack"
+#   print "    ...       : continue (used on command line)"
+    print "    \\         : inhibit stack dump"
+} # end help
 
 function eval(word)
 {
@@ -245,16 +246,22 @@ function eval(word)
 
     else if (word == "?" || word == "help") {
 	help()
+	inhibit_dump = 1
     }
 
     else if (word == ".") {
 	if (tos < 1) { print ". error: empty stack" ; return }
 	print pop()
+	inhibit_dump = 1
     }
 
     else if (word == ",") {
 	dump()
     }
+
+#   else if (word == "...") {
+#       Continue = 1
+#   }
 
     else if (word == "\\") {
 	inhibit_dump = 1
@@ -268,7 +275,7 @@ function eval(word)
     else {
         print "error: unrecognized word " word
     }
-}
+} #  end eval
 
 BEGIN	{
 	    tos = 0
@@ -302,9 +309,27 @@ BEGIN	{
 	    variables["e"]  = 2.71828182845904523536
 
 	    OFMT = "%.16g"
-	}
 
-	{
+	    if (ARGC > 1) {
+	        arg_string = ""
+	        for (i = 1; i < ARGC; i ++) {
+		    arg_string = arg_string " " ARGV[i]
+		}
+		split(arg_string, arg_list, " ");
+		for (i = 1; i in arg_list; i ++) {
+		    arg = arg_list[i]
+		    eval(arg)
+		}
+		if (arg != "," && ! inhibit_dump) {
+		    dump()
+		}
+#		if (! Continue) {
+		    exit
+#		}
+	    }
+	} # end BEGIN block
+
+	{ # main loop
 	    inhibit_dump = 0
 	    for (i = 1; i <= NF; i ++) {
 		eval($i)
@@ -312,4 +337,4 @@ BEGIN	{
 	    if ($NF != "," && ! inhibit_dump) {
 		dump()
 	    }
-	}
+	} # end main loop
