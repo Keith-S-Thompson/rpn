@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-# $Id: calc,v 1.35 1999-09-21 23:25:55-07 kst Exp $
+# $Id: calc,v 1.36 1999-09-21 23:33:47-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -34,7 +34,7 @@ my $prog_name = File::Basename::basename $0;
 my $Debugging;
 my $Help;
 Getopt::Long::GetOptions 'debug|d' => \$Debugging,
-			 'help|h'  => \$Help       or Usage;
+                         'help|h'  => \$Help       or Usage;
 Usage if $Help;
 
 my $inhibit_dump = 0;
@@ -42,15 +42,20 @@ my $inhibit_dump = 0;
 my @stack = qw(BOTTOM);
 
 my @reserved = qw( acos asin atan atan2 clear cos deg depth drop
-		   dropn dup exp help hex Hex hms HMS int ln log octal
-		   Octal ofmt rand sin sqrt srand srandx swap tan vars );
+                   dropn dup exp help hex Hex hms HMS int ln log octal
+                   Octal ofmt rand sin sqrt srand srandx swap tan vars );
 my %reserved;
 foreach (@reserved) {
     $reserved{$_} = 1;
 }
 
-my %variables = ( pi => 4 * atan2(1, 1),
-                  e  => exp 1 );
+my %variables = ( pi => abs atan2(0, -1),
+                  e  => exp 1,
+                  k  => 2**10,
+                  M  => 2**20,
+                  G  => 2**30,
+                  T  => 2**40,
+                  P  => 2**50 );
 my $degrees_to_radians = $variables{pi} / 180.0;
 my $ofmt = '%.16g';
 
@@ -73,23 +78,23 @@ sub Dump($) {
     my $format;
 
     if ($base eq 'HMS') {
-	$format = "%3d: %s\n";
+        $format = "%3d: %s\n";
     }
     else {
-	$format = "%3d: $ofmt\n" if $base == 10;
-	$format = "%3d: 0x%x\n"  if $base == 16;
-	$format = "%3d: 0%o\n"   if $base ==  8;
+        $format = "%3d: $ofmt\n" if $base == 10;
+        $format = "%3d: 0x%x\n"  if $base == 16;
+        $format = "%3d: 0%o\n"   if $base ==  8;
     }
 
     if ($#stack) {
         for ($i = 1; $i <= $#stack; $i ++) {
             # printf("%3d: %s\n", $i, $stack[$i]);
-	    if ($base eq 'HMS') {
-		printf $format, $i, To_HMS $stack[$i];
-	    }
-	    else {
-		printf $format, $i, $stack[$i];
-	    }
+            if ($base eq 'HMS') {
+                printf $format, $i, To_HMS $stack[$i];
+            }
+            else {
+                printf $format, $i, $stack[$i];
+            }
         }
     }
     else {
@@ -120,7 +125,7 @@ sub Is_Numeric($) {
         }
         else {
             warn $warning; # some other warning (?)
-	    return 0;
+            return 0;
         }
     }
     else {
@@ -146,8 +151,8 @@ sub From_HMS($) {
     @fields = split /:/, $word;
 
     for (my $i = $#fields; $i >= 0; $i --) {
-	$result += $fields[$i];
-	$result /= 60.0 if $i > 0;
+        $result += $fields[$i];
+        $result /= 60.0 if $i > 0;
     }
     return $result;
 } # From_HMS
@@ -241,13 +246,13 @@ sub Evaluate($) {
 
     elsif ($word eq 'dropn') {
         Check $word, 1 and do {
-	    if ($#stack >= $stack[$#stack] + 1) {
-		$#stack -= $stack[$#stack] + 1;
-	    }
-	    else {
-		warn "$word error: too few arguments\n";
-	    }
-	};
+            if ($#stack >= $stack[$#stack] + 1) {
+                $#stack -= $stack[$#stack] + 1;
+            }
+            else {
+                warn "$word error: too few arguments\n";
+            }
+        };
     }
 
     elsif ($word eq 'clear') {
@@ -268,7 +273,7 @@ sub Evaluate($) {
 
     elsif ($word eq '+') {
         Check $word, 2 and do {
-	    my($y, $x) = (pop @stack, pop @stack);
+            my($y, $x) = (pop @stack, pop @stack);
             push @stack, $x + $y;
         };
     }
@@ -310,16 +315,16 @@ sub Evaluate($) {
 
     elsif ($word eq '--') {
         Check $word, 1 and do {
-	    my($x) = pop @stack;
-	    push @stack, - $x;
-	}
+            my($x) = pop @stack;
+            push @stack, - $x;
+        }
     }
 
     elsif ($word eq '//') {
         Check $word, 1 and do {
-	    my($x) = pop @stack;
-	    push @stack, 1.0 / $x;
-	}
+            my($x) = pop @stack;
+            push @stack, 1.0 / $x;
+        }
     }
 
     elsif ($word eq '%%') {
@@ -335,42 +340,42 @@ sub Evaluate($) {
     #
 
     elsif ($word eq '&') {
-	Check $word, 2 and do {
+        Check $word, 2 and do {
             my($y, $x) = (pop @stack, pop @stack);
-	    push @stack, (0 + $x) & (0 + $y);
-	}
+            push @stack, (0 + $x) & (0 + $y);
+        }
     }
 
     elsif ($word eq '|') {
-	Check $word, 2 and do {
+        Check $word, 2 and do {
             my($y, $x) = (pop @stack, pop @stack);
-	    push @stack, (0 + $x) | (0 + $y);
-	}
+            push @stack, (0 + $x) | (0 + $y);
+        }
     }
 
     elsif ($word eq '^') {
-	Check $word, 2 and do {
+        Check $word, 2 and do {
             my($y, $x) = (pop @stack, pop @stack);
-	    push @stack, (0 + $x) ^ (0 + $y);
-	}
+            push @stack, (0 + $x) ^ (0 + $y);
+        }
     }
 
     elsif ($word eq '~') {
-	Check $word, 1 and push @stack, ~ (0 + pop @stack);
+        Check $word, 1 and push @stack, ~ (0 + pop @stack);
     }
 
     elsif ($word eq '<<') {
-	Check $word, 2 and do {
+        Check $word, 2 and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, (0 + $x) << (0 + $y);
-	}
+        }
     }
 
     elsif ($word eq '>>') {
-	Check $word, 2 and do {
+        Check $word, 2 and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, (0 + $x) >> (0 + $y);
-	}
+        }
     }
 
     elsif ($word eq 'sin') {
@@ -414,7 +419,7 @@ sub Evaluate($) {
     }
 
     elsif ($word eq 'deg') {
-	Check $word, 1 and push @stack, pop(@stack) * $degrees_to_radians;
+        Check $word, 1 and push @stack, pop(@stack) * $degrees_to_radians;
     }
 
     elsif ($word eq 'exp') {
@@ -519,7 +524,7 @@ sub Evaluate($) {
 
     elsif ($word eq 'hms') {
         Check $word, 1 and do {
-	    print To_HMS($stack[$#stack]), "\n";
+            print To_HMS($stack[$#stack]), "\n";
             $inhibit_dump = 1;
         };
     }
@@ -557,11 +562,11 @@ sub Evaluate($) {
     }
 
     elsif (Is_HMS $word) {
-	push @stack, From_HMS $word;
+        push @stack, From_HMS $word;
     }
 
     elsif (Is_Hex $word) {
-	push @stack, hex $word;
+        push @stack, hex $word;
     }
 
     else {
@@ -578,39 +583,39 @@ sub Evaluate_String($) {
 
     Debug "DEBUG: \$eval_string = \"$eval_string\"\n";
     {
-	local $SIG{__WARN__} = sub { $warning = $_[0] };
-	{
-	    no strict;
-	    $result = eval $eval_string;
-	}
-	Debug "DEBUG: \$result  = ",  Image($result),  "\n";
-	Debug "DEBUG: \$\@       = ", Image($@),       "\n";
-	Debug "DEBUG: \$warning = ",  Image($warning), "\n";
-	if (defined $warning) {
-	    $warning =~ s/ at .*$//;
-	}
-	if (defined $@) {
-	    $@ =~ s/ at .*$//;
-	}
+        local $SIG{__WARN__} = sub { $warning = $_[0] };
+        {
+            no strict;
+            $result = eval $eval_string;
+        }
+        Debug "DEBUG: \$result  = ",  Image($result),  "\n";
+        Debug "DEBUG: \$\@       = ", Image($@),       "\n";
+        Debug "DEBUG: \$warning = ",  Image($warning), "\n";
+        if (defined $warning) {
+            $warning =~ s/ at .*$//;
+        }
+        if (defined $@) {
+            $@ =~ s/ at .*$//;
+        }
     }
     if (defined $result) {
-	if (defined $warning) {
-	    warn "Warning: $warning\n";
-	}
-	if (Is_Numeric $result) {
-	    push @stack, $result;
-	}
-	else {
-	    warn "Result = ", Image($result), " is non-numeric\n";
-	}
+        if (defined $warning) {
+            warn "Warning: $warning\n";
+        }
+        if (Is_Numeric $result) {
+            push @stack, $result;
+        }
+        else {
+            warn "Result = ", Image($result), " is non-numeric\n";
+        }
     }
     else {
-	if (defined $warning) {
-	    warn "Warning: $warning\n";
-	}
-	if (defined $@) {
-	    warn "Error: $@\n";
-	}
+        if (defined $warning) {
+            warn "Warning: $warning\n";
+        }
+        if (defined $@) {
+            warn "Error: $@\n";
+        }
     }
 } # Evaluate_String
 
@@ -627,20 +632,20 @@ sub Evaluate_Line($) {
     $line =~ s/^\s*//;
     $line =~ s/\s*$//;
     if ($line =~ /^:\s*(.*)$/) {
-	$is_eval = 1;
-	Evaluate_String $1;
+        $is_eval = 1;
+        Evaluate_String $1;
     }
     else {
-	$is_eval = 0;
-	foreach my $arg (split /\s+/, $line) {
-	    $last_arg = $arg;
-	    Debug "DEBUG: calling evaluate \"$arg\"\n";
-	    Evaluate $arg;
-	}
+        $is_eval = 0;
+        foreach my $arg (split /\s+/, $line) {
+            $last_arg = $arg;
+            Debug "DEBUG: calling evaluate \"$arg\"\n";
+            Evaluate $arg;
+        }
     }
     if ($is_eval or (defined $last_arg and
-		     $last_arg ne "," and
-		     not $inhibit_dump)) {
+                     $last_arg ne "," and
+                     not $inhibit_dump)) {
         Dump 10;
     }
 } # Evaluate_Line
@@ -651,19 +656,19 @@ sub Factorial($) {
     my($x) = @_;
 
     if ($x != int $x) {
-	warn "Factorial requires an integer argument\n";
-	return $x;
+        warn "Factorial requires an integer argument\n";
+        return $x;
     }
     elsif ($x < 0) {
-	warn "Factorial requires a non-negative argument\n";
-	return $x;
+        warn "Factorial requires a non-negative argument\n";
+        return $x;
     }
     else {
-	my($result) = 1;
-	for (my $i = 2; $i <= $x; $i ++) {
-	    $result *= $i;
-	}
-	return $result;
+        my($result) = 1;
+        for (my $i = 2; $i <= $x; $i ++) {
+            $result *= $i;
+        }
+        return $result;
     }
 } # Factorial
 
@@ -679,11 +684,11 @@ sub Image($) {
     my($result) = @_;
 
     if (defined $result) {
-	$result =~ s/\n/\\n/g;
-	return "\"$result\"";
+        $result =~ s/\n/\\n/g;
+        return "\"$result\"";
     }
     else {
-	return "undef";
+        return "undef";
     }
 } # Image
 
