@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-# $Id: calc,v 1.37 1999-10-20 14:14:45-07 kst Exp $
+# $Id: calc,v 1.38 1999-11-09 01:42:13-08 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -389,7 +389,7 @@ sub Evaluate($) {
     elsif ($word eq 'tan') {
         Check $word, 1 and do {
             my($x) = pop @stack;
-            push @stack, sin $x / cos $x;
+            push @stack, sin($x) / cos($x);
         };
     }
 
