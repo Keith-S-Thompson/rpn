@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-# $Header: /home/kst/calc/calc,v 1.28 1997-09-14 17:28:31-07 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.29 1997-09-24 23:35:12-07 kst Exp $
 
 #
 # Currently valid @stack runs from 1 to $#stack inclusive.
@@ -8,8 +8,9 @@
 #
 
 use strict;
-use subs qw( Usage Debug Dump Show_Vars Is_Numeric Is_HMS From_HMS To_HMS
-             Is_Hex Help Check Evaluate Evaluate_Line Factorial );
+use subs qw( Usage Debug Image Dump Show_Vars Is_Numeric
+	     Is_HMS From_HMS To_HMS Is_Hex
+	     Help Check Evaluate Evaluate_String Evaluate_Line Factorial );
 use vars qw( $prog_name $opt_d $opt_h $Debugging
 	     @stack %reserved %variables
 	     $degrees_to_radians $ofmt $inhibit_dump );
@@ -543,23 +544,74 @@ sub Evaluate {
     }
 
     else {
-        print STDERR "error: unrecognized word $word\n";
+        warn "error: unrecognized word $word\n";
     }
-} #  end Evaluate
+} # Evaluate
+
+sub Evaluate_String {
+    my($eval_string) = @_;
+    my $result;
+    my $warning = undef;
+
+    Debug "DEBUG: \$eval_string = \"$eval_string\"\n";
+    {
+	local $SIG{__WARN__} = sub { $warning = $_[0] };
+	{
+	    no strict;
+	    $result = eval $eval_string;
+	}
+	Debug "DEBUG: \$result  = ",  Image($result),  "\n";
+	Debug "DEBUG: \$\@       = ", Image($@),       "\n";
+	Debug "DEBUG: \$warning = ",  Image($warning), "\n";
+	if (defined $warning) {
+	    $warning =~ s/ at .*$//;
+	}
+	if (defined $@) {
+	    $@ =~ s/ at .*$//;
+	}
+    }
+    if (defined $result) {
+	if (defined $warning) {
+	    warn "Warning: $warning\n";
+	}
+	if (Is_Numeric $result) {
+	    push @stack, $result;
+	}
+	else {
+	    warn "Result = ", Image($result), " is non-numeric\n";
+	}
+    }
+    else {
+	if (defined $warning) {
+	    warn "Warning: $warning\n";
+	}
+	if (defined $@) {
+	    warn "Error: $@\n";
+	}
+    }
+} # Evaluate_String
 
 sub Evaluate_Line {
     my($line) = @_;
     my $last_arg;
+    my $is_eval;
 
     Debug "DEBUG: evaluate_line \"$line\"\n";
     $inhibit_dump = 0;
 
-    foreach my $arg (split /\s+/, $line) {
-        $last_arg = $arg;
-        Debug "DEBUG: calling evaluate \"$arg\"\n";
-        Evaluate $arg;
+    if ($line =~ /^\s*:\s*(.*)$/) {
+	$is_eval = 1;
+	Evaluate_String $1;
     }
-    if ($last_arg ne "," and not $inhibit_dump) {
+    else {
+	$is_eval = 0;
+	foreach my $arg (split /\s+/, $line) {
+	    $last_arg = $arg;
+	    Debug "DEBUG: calling evaluate \"$arg\"\n";
+	    Evaluate $arg;
+	}
+    }
+    if ($is_eval or ($last_arg ne "," and not $inhibit_dump)) {
         Dump 10;
     }
 } # Evaluate_Line
@@ -587,6 +639,18 @@ sub Factorial {
 sub Debug {
     print @_ if $Debugging;
 } # Debug
+
+sub Image {
+    my($result) = @_;
+
+    if (defined $result) {
+	$result =~ s/\n/\\n/g;
+	return "\"$result\"";
+    }
+    else {
+	return "undef";
+    }
+} # Image
 
 sub Usage {
     print @_ if @_;
