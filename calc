@@ -1,6 +1,6 @@
 #!/user/local/awk -f
 
-# $Header: /home/kst/calc/calc,v 1.5 1993-04-28 18:17:18-07 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.6 1993-04-28 18:20:06-07 kst Exp $
 
 #
 # currently valid stack runs from 1 to tos inclusive
@@ -184,7 +184,8 @@ function eval(word)
     }
 
     else if (word == "atan2") {
-	push(atan2(pop(), pop()))
+	x = pop()
+	push(atan2(pop(), x))
     }
 
     else if (word == "exp") {
