@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl5.6.0 -w
 
-# $Id: calc,v 1.40 2000-09-19 23:29:44-07 kst Exp $
+# $Id: calc,v 1.41 2003-04-08 18:28:45-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -89,7 +89,10 @@ sub Dump($) {
     if ($#stack) {
         for ($i = 1; $i <= $#stack; $i ++) {
             # printf("%3d: %s\n", $i, $stack[$i]);
-            if ($base eq 'HMS') {
+	    if (ref $stack[$i] eq 'SCALAR') {
+                printf "%3d: \"%s\"\n", $i, ${$stack[$i]};
+	    }
+            elsif ($base eq 'HMS') {
                 printf $format, $i, To_HMS $stack[$i];
             }
             else {
@@ -570,7 +573,8 @@ sub Evaluate($) {
     }
 
     else {
-        warn "error: unrecognized word $word\n";
+        # warn "error: unrecognized word $word\n";
+	push @stack, \$word;
     }
 } # Evaluate
 
@@ -606,7 +610,8 @@ sub Evaluate_String($) {
             push @stack, $result;
         }
         else {
-            warn "Result = ", Image($result), " is non-numeric\n";
+            # warn "Result = ", Image($result), " is non-numeric\n";
+	    push @stack, \$result;
         }
     }
     else {
