@@ -1,6 +1,6 @@
 #!/user/local/awk -f
 
-# $Header: /home/kst/calc/calc,v 1.2 1992-11-20 15:53:19-08 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.3 1993-01-18 06:02:27-08 kst Exp $
 
 #
 # currently valid stack runs from 1 to tos inclusive
@@ -57,6 +57,9 @@ function numeric(x)
 function help()
 {
     print "    +-*/%^:     arithmetic operators"
+    print "    **:         synonym for ^"
+    print "    --:         negate"
+    print "    //:         reciprocal"
     print "    dup:        duplicate top of stack (tos)"
     print "    drop:       drop tos"
     print "    clear:      clear stack"
@@ -69,6 +72,7 @@ function help()
     print "    log:        log base 10"
     print "    int:        integer part (truncate towards 0)"
     print "    srand:      set random seed"
+    print "    srandx:     set random seed to specified value"
     print "    rand:       random number"
     print "    sqrt:       square root"
     print "    vars:       show all variables"
@@ -149,12 +153,22 @@ function eval(word)
 	push(y % x)
     }
 
-    else if (word == "^")
+    else if (word == "^" || word == "**")
     {
 	if (tos < 2) { print "/ error: too few arguments" ; return }
 	y = pop()
 	x = pop()
 	push(x ^ y)
+    }
+
+    else if (word == "--")
+    {
+	push(-pop())
+    }
+
+    else if (word == "//")
+    {
+	push(1.0/pop())
     }
 
     else if (word == "sin")
@@ -218,9 +232,14 @@ function eval(word)
 	push(int(pop()))
     }
 
-    else if (word == "srand")
+    else if (word == "srandx")
     {
 	srand(pop())
+    }
+
+    else if (word == "srand")
+    {
+	srand()
     }
 
     else if (word == "rand")
@@ -315,6 +334,7 @@ BEGIN	{
 	    reserved["sin"]   = 1
 	    reserved["sqrt"]  = 1
 	    reserved["srand"] = 1
+	    reserved["srandx"] = 1
 	    reserved["swap"]  = 1
 	    reserved["tan"]   = 1
 	    reserved["vars"]  = 1
