@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-# $Header: /home/kst/calc/calc,v 1.25 1997-09-14 16:37:41-07 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.26 1997-09-14 16:59:39-07 kst Exp $
 
 #
 # Currently valid @stack runs from 1 to $#stack inclusive.
@@ -8,12 +8,16 @@
 #
 
 use strict;
-use subs qw( Dump Show_Vars Is_Numeric Is_HMS From_HMS To_HMS Is_Hex Help
-             Check Evaluate Evaluate_Line Factorial );
-use vars qw( $debugging @stack %reserved %variables
+use subs qw( Usage Debug Dump Show_Vars Is_Numeric Is_HMS From_HMS To_HMS
+             Is_Hex Help Check Evaluate Evaluate_Line Factorial );
+use vars qw( $prog_name $opt_d $opt_h $Debugging
+	     @stack %reserved %variables
 	     $degrees_to_radians $ofmt $inhibit_dump );
+use Getopt::Std;
 
-$debugging = defined $ENV{DEBUG};
+getopts 'dh' or Usage;
+Usage if defined $opt_h;
+$Debugging = defined $opt_d;
 
 @stack = qw(BOTTOM);
 
@@ -31,6 +35,7 @@ $debugging = defined $ENV{DEBUG};
 	      'deg'    => 1,
 	      'depth'  => 1,
 	      'drop'   => 1,
+	      'dropn'  => 1,
 	      'dup'    => 1,
 	      'exp'    => 1,
 	      'help'   => 1,
@@ -71,15 +76,6 @@ else {
 }
 
 ########################################################################
-
-## sub pop {
-##     pop @stack;
-## } # pop
-
-## sub push {
-##     local($item) = @_;
-##     push(@stack, $item);
-## } # push
 
 sub Dump {
     my($base) = @_;
@@ -131,6 +127,7 @@ sub Is_Numeric {
         }
         else {
             warn $warning; # some other warning (?)
+	    return 0;
         }
     }
     else {
@@ -176,6 +173,7 @@ sub Help {
     %%                : / and %
     dup               : duplicate top of stack (tos)
     drop              : drop tos
+    dropn             : drop tos+1 items from stack
     clear             : clear stack
     swap              : swap top two stack elements
     sin, cos, tan, asin, acos, atan :
@@ -213,7 +211,8 @@ sub Check {
 
     if ($#stack >= $count) {
         return 1;
-    } else {
+    }
+    else {
         warn "$word error: too few arguments\n";
         return 0;
     }
@@ -222,7 +221,7 @@ sub Check {
 sub Evaluate {
     my($word) = @_;
 
-    print "DEBUG: evaluate \"$word\"\n" if $debugging;
+    Debug "DEBUG: evaluate \"$word\"\n";
 
     if ($word eq 'dup') {
         Check $word, 1 and push @stack, $stack[$#stack];
@@ -230,6 +229,17 @@ sub Evaluate {
 
     elsif ($word eq 'drop') {
         Check $word, 1 and pop @stack;
+    }
+
+    elsif ($word eq 'dropn') {
+        Check $word, 1 and do {
+	    if ($#stack >= $stack[$#stack] + 1) {
+		$#stack -= $stack[$#stack] + 1;
+	    }
+	    else {
+		warn "$word error: too few arguments\n";
+	    }
+	};
     }
 
     elsif ($word eq 'clear') {
@@ -245,47 +255,47 @@ sub Evaluate {
             my($temp1, $temp2) = (pop @stack, pop @stack);
             push @stack, $temp1;
             push @stack, $temp2;
-        }
+        };
     }
 
     elsif ($word eq '+') {
         Check $word, 2 and do {
             push @stack, pop(@stack) + pop(@stack);
-        }
+        };
     }
 
     elsif ($word eq '-') {
         Check $word, 2 and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, $x - $y;
-        }
+        };
     }
 
     elsif ($word eq '*') {
         Check $word, 2 and do {
             push @stack, pop(@stack) * pop(@stack);
-        }
+        };
     }
 
     elsif ($word eq '/') {
         Check $word, 2 and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, $x / $y;
-        }
+        };
     }
 
     elsif ($word eq '%') {
         Check $word, 2 and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, $x % $y;
-        }
+        };
     }
 
     elsif ($word eq '**') {
         Check $word, 2 and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, $x ** $y;
-        }
+        };
     }
 
     elsif ($word eq '^') {
@@ -319,21 +329,21 @@ sub Evaluate {
         Check $word, 1 and do {
             my($x) = pop @stack;
             push @stack, sin $x / cos $x;
-        }
+        };
     }
 
     elsif ($word eq 'asin') {
         Check $word, 1 and do {
             my($x) = pop @stack;
             push @stack, atan2($x, sqrt(1 - $x**2));
-        }
+        };
     }
 
     elsif ($word eq 'acos') {
         Check $word, 1 and do {
             my($x) = pop @stack;
             push @stack, atan2(sqrt(1 - $x**2), $x);
-        }
+        };
     }
 
     elsif ($word eq 'atan') {
@@ -344,7 +354,7 @@ sub Evaluate {
         Check $word, 2 and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, atan2($x, $y);
-        }
+        };
     }
 
     elsif ($word eq 'deg') {
@@ -376,7 +386,7 @@ sub Evaluate {
     }
 
     elsif ($word eq 'srand') {
-        srand time^$$;
+        srand(time^$$);
     }
 
     elsif ($word eq 'rand') {
@@ -384,7 +394,7 @@ sub Evaluate {
     }
 
     elsif ($word eq 'randx') {
-        Check $word, 1 and push @stack, rand pop @stack
+        Check $word, 1 and push @stack, rand pop @stack;
     }
 
     elsif ($word eq 'sqrt') {
@@ -429,14 +439,14 @@ sub Evaluate {
         Check $word, 1 and do {
             printf "$ofmt\n", pop @stack;
             $inhibit_dump = 1;
-        }
+        };
     }
 
     elsif ($word eq 'hex') {
         Check $word, 1 and do {
             printf "0x%x\n", int $stack[$#stack];
             $inhibit_dump = 1;
-        }
+        };
     }
 
     elsif ($word eq 'octal') {
@@ -448,14 +458,14 @@ sub Evaluate {
             # Commented out workaround; no longer needed
             printf "0%o\n", int $stack[$#stack];
             $inhibit_dump = 1;
-        }
+        };
     }
 
     elsif ($word eq 'hms') {
         Check $word, 1 and do {
 	    print To_HMS($stack[$#stack]), "\n";
             $inhibit_dump = 1;
-        }
+        };
     }
 
     elsif ($word eq ',') {
@@ -507,12 +517,12 @@ sub Evaluate_Line {
     my($line) = @_;
     my $last_arg;
 
-    print "DEBUG: evaluate_line \"$line\"\n" if $debugging;
+    Debug "DEBUG: evaluate_line \"$line\"\n";
     $inhibit_dump = 0;
 
     foreach my $arg (split /\s+/, $line) {
         $last_arg = $arg;
-        print "DEBUG: calling evaluate \"$arg\"\n" if $debugging;
+        Debug "DEBUG: calling evaluate \"$arg\"\n";
         Evaluate $arg;
     }
     if ($last_arg ne "," and not $inhibit_dump) {
@@ -528,7 +538,7 @@ sub Factorial {
 	return $x;
     }
     elsif ($x < 0) {
-	warn "Factorial requires a positive argument\n";
+	warn "Factorial requires a non-negative argument\n";
 	return $x;
     }
     else {
@@ -539,3 +549,17 @@ sub Factorial {
 	return $result;
     }
 } # Factorial
+
+sub Debug {
+    print @_ if $Debugging;
+} # Debug
+
+sub Usage {
+    print @_ if @_;
+    print <<"EOF";
+Usage: $prog_name [options] [RPN expr]
+    -h : Help
+    -d : Debugging
+EOF
+    exit 1;
+} # Usage
