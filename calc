@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl5.6.0 -w
 
-# $Id: calc,v 1.42 2004-03-07 19:26:31-08 kst Exp $
+# $Id: calc,v 1.43 2004-11-19 15:48:53-08 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -29,6 +29,7 @@ sub Is_HMS($);
 sub From_HMS($);
 sub To_HMS($);
 sub Is_Hex($);
+sub De_Comma($);
 
 my $prog_name = File::Basename::basename $0;
 
@@ -262,6 +263,7 @@ sub Check_Numeric($$) {
 
 sub Evaluate($) {
     my($word) = @_;
+    my $tmp;
 
     Debug "DEBUG: evaluate \"$word\"\n";
 
@@ -587,8 +589,8 @@ sub Evaluate($) {
         $inhibit_dump = 1;
     }
 
-    elsif (Is_Numeric $word) {
-        push @stack, $word;
+    elsif (Is_Numeric ($tmp = De_Comma $word)) {
+        push @stack, $tmp;
     }
 
     elsif (Is_HMS $word) {
@@ -723,6 +725,14 @@ sub Image($) {
         return "undef";
     }
 } # Image
+
+# ----------------------------------------------------------------------
+
+sub De_Comma($) {
+    my($s) = @_;
+    $s =~ s/,//g;
+    return $s;
+} # De_Comma
 
 # ----------------------------------------------------------------------
 
