@@ -1,13 +1,13 @@
 #!/usr/local/bin/perl -w
 
-# $Header: /home/kst/calc/calc,v 1.15 1996-08-07 20:19:04-07 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.16 1996-08-07 20:24:05-07 kst Exp $
 
 #
 # Currently valid @stack runs from 1 to $#stack inclusive;
 # Index 0 is not used (and is set to 'BOTTOM')
 #
 
-use subs qw(Dump Show_Vars Numeric Help Check Evaluate Evaluate_Line);
+use subs qw(Dump Show_Vars Numeric Help Check Evaluate Evaluate_Line Factorial);
 
 $debugging = defined $ENV{DEBUG};
 
@@ -317,6 +317,10 @@ sub Evaluate {
         Check 1 and push @stack, sqrt pop @stack;
     }
 
+    elsif ($word eq '!') {
+        Check 1 and push @stack, Factorial pop @stack;
+    }
+
     elsif ($word eq 'vars') {
         Show_Vars;
     }
@@ -415,5 +419,25 @@ sub Evaluate_Line {
     }
     if ($last_arg ne "," and not $inhibit_dump) {
         Dump 10;
+    }
+} # end Evaluate_Line
+
+sub Factorial {
+    my($x) = @_;
+
+    if ($x != int $x) {
+	warn "Factorial requires an integer argument\n";
+	return $x;
+    }
+    elsif ($x < 0) {
+	warn "Factorial requires a positive argument\n";
+	return $x;
+    }
+    else {
+	my($result) = 1;
+	for ($i = 2; $i <= $x; $i ++) {
+	    $result *= $i;
+	}
+	return $result;
     }
 }
