@@ -1,6 +1,7 @@
 #!/usr/local/bin/perl -w
 
-# $Header: /home/kst/calc/calc,v 1.34 1999-08-24 23:05:08-07 kst Exp $
+# $Id: calc,v 1.35 1999-09-21 23:25:55-07 kst Exp $
+# $Source: /home/kst/calc/calc,v $
 
 #
 # Currently valid @stack runs from 1 to $#stack inclusive.
@@ -8,64 +9,50 @@
 #
 
 use strict;
-use subs qw( Usage Debug Image Dump Show_Vars Is_Numeric
-	     Is_HMS From_HMS To_HMS Is_Hex
-	     Help Check Evaluate Evaluate_String Evaluate_Line Factorial );
-use vars qw( $prog_name $opt_d $opt_h $Debugging
-	     @stack %reserved %variables
-	     $degrees_to_radians $ofmt $inhibit_dump );
-use Getopt::Std;
+use Getopt::Long ();
+use File::Basename ();
 
-($prog_name = $0) =~ s(.*/)();
+sub Usage(@);
+sub Debug(@);
+sub Image($);
+sub Factorial($);
+sub Help();
+sub Check($$);
+sub Evaluate($);
+sub Evaluate_String($);
+sub Evaluate_Line($);
+sub Dump($);
+sub Show_Vars();
+sub Is_Numeric($);
+sub Is_HMS($);
+sub From_HMS($);
+sub To_HMS($);
+sub Is_Hex($);
 
-getopts 'dh' or Usage;
-Usage if defined $opt_h;
-$Debugging = defined $opt_d;
+my $prog_name = File::Basename::basename $0;
 
-@stack = qw(BOTTOM);
+my $Debugging;
+my $Help;
+Getopt::Long::GetOptions 'debug|d' => \$Debugging,
+			 'help|h'  => \$Help       or Usage;
+Usage if $Help;
 
-#
-# Note: The quotes are necessary here, since many of the names are
-#       reserved words.
-#
-%reserved = ( 'acos'   => 1,
-	      'asin'   => 1,
-	      'atan'   => 1,
-	      'atan2'  => 1,
-	      'clear'  => 1,
-	      'cos'    => 1,
-	      'deg'    => 1,
-	      'depth'  => 1,
-	      'drop'   => 1,
-	      'dropn'  => 1,
-	      'dup'    => 1,
-	      'exp'    => 1,
-	      'help'   => 1,
-	      'hex'    => 1,
-	      'Hex'    => 1,
-	      'hms'    => 1,
-	      'HMS'    => 1,
-	      'int'    => 1,
-	      'ln'     => 1,
-	      'log'    => 1,
-	      'octal'  => 1,
-	      'Octal'  => 1,
-	      'ofmt'   => 1,
-	      'rand'   => 1,
-	      'sin'    => 1,
-	      'sqrt'   => 1,
-	      'srand'  => 1,
-	      'srandx' => 1,
-	      'swap'   => 1,
-	      'tan'    => 1,
-	      'vars'   => 1 );
+my $inhibit_dump = 0;
 
-$variables{pi} = 3.14159265358979323846;
-$variables{e}  = 2.71828182845904523536;
+my @stack = qw(BOTTOM);
 
-$degrees_to_radians = $variables{pi} / 180.0;
+my @reserved = qw( acos asin atan atan2 clear cos deg depth drop
+		   dropn dup exp help hex Hex hms HMS int ln log octal
+		   Octal ofmt rand sin sqrt srand srandx swap tan vars );
+my %reserved;
+foreach (@reserved) {
+    $reserved{$_} = 1;
+}
 
-$ofmt = '%.16g';
+my %variables = ( pi => 4 * atan2(1, 1),
+                  e  => exp 1 );
+my $degrees_to_radians = $variables{pi} / 180.0;
+my $ofmt = '%.16g';
 
 if (@ARGV) {
     Evaluate_Line join ' ', @ARGV;
@@ -79,7 +66,7 @@ else {
 
 ########################################################################
 
-sub Dump {
+sub Dump($) {
     my($base) = @_;
 
     my $i;
@@ -110,13 +97,17 @@ sub Dump {
     }
 } # Dump
 
-sub Show_Vars {
+# ----------------------------------------------------------------------
+
+sub Show_Vars() {
     foreach my $name (sort keys %variables) {
         printf "%-8s = $ofmt\n", $name, $variables{$name};
     }
 } # Show_Vars
 
-sub Is_Numeric {
+# ----------------------------------------------------------------------
+
+sub Is_Numeric($) {
     my $arg = $_[0];
     my $warning = undef;
     {
@@ -137,13 +128,17 @@ sub Is_Numeric {
     }
 } # Is_Numeric
 
-sub Is_HMS {
+# ----------------------------------------------------------------------
+
+sub Is_HMS($) {
     my($word) = @_;
 
     return $word =~ /^(\d+:)+\d+$/;
 } # Is_HMS
 
-sub From_HMS {
+# ----------------------------------------------------------------------
+
+sub From_HMS($) {
     my($word) = @_;
     my @fields;
     my $result = 0.0;
@@ -157,17 +152,23 @@ sub From_HMS {
     return $result;
 } # From_HMS
 
-sub To_HMS {
+# ----------------------------------------------------------------------
+
+sub To_HMS($) {
     return "To_HMS not yet implemented";
 } # To_HMS
 
-sub Is_Hex {
+# ----------------------------------------------------------------------
+
+sub Is_Hex($) {
     my($word) = @_;
 
     return $word =~ /^0x[\da-f]/i;
 } # Is_Hex
 
-sub Help {
+# ----------------------------------------------------------------------
+
+sub Help() {
     print <<'EOF';
     +, -, *, /, %, ** : arithmetic operators
     --                : negate
@@ -209,7 +210,9 @@ EOF
 #   print "    ...          : continue (used on command line)"
 } # Help
 
-sub Check {
+# ----------------------------------------------------------------------
+
+sub Check($$) {
     my($word, $count) = @_;
 
     if ($#stack >= $count) {
@@ -221,7 +224,9 @@ sub Check {
     }
 } # Check
 
-sub Evaluate {
+# ----------------------------------------------------------------------
+
+sub Evaluate($) {
     my($word) = @_;
 
     Debug "DEBUG: evaluate \"$word\"\n";
@@ -564,7 +569,9 @@ sub Evaluate {
     }
 } # Evaluate
 
-sub Evaluate_String {
+# ----------------------------------------------------------------------
+
+sub Evaluate_String($) {
     my($eval_string) = @_;
     my $result;
     my $warning = undef;
@@ -607,7 +614,9 @@ sub Evaluate_String {
     }
 } # Evaluate_String
 
-sub Evaluate_Line {
+# ----------------------------------------------------------------------
+
+sub Evaluate_Line($) {
     my($line) = @_;
     my $last_arg;
     my $is_eval;
@@ -636,7 +645,9 @@ sub Evaluate_Line {
     }
 } # Evaluate_Line
 
-sub Factorial {
+# ----------------------------------------------------------------------
+
+sub Factorial($) {
     my($x) = @_;
 
     if ($x != int $x) {
@@ -656,11 +667,15 @@ sub Factorial {
     }
 } # Factorial
 
-sub Debug {
+# ----------------------------------------------------------------------
+
+sub Debug(@) {
     print @_ if $Debugging;
 } # Debug
 
-sub Image {
+# ----------------------------------------------------------------------
+
+sub Image($) {
     my($result) = @_;
 
     if (defined $result) {
@@ -672,12 +687,14 @@ sub Image {
     }
 } # Image
 
-sub Usage {
+# ----------------------------------------------------------------------
+
+sub Usage(@) {
     print @_ if @_;
     print <<"EOF";
 Usage: $prog_name [options] [RPN expr]
-    -h : Help
-    -d : Debugging
+    -h --help      : Help
+    -d --debugging : Debugging
 Commands:
 EOF
     Help;
