@@ -1,13 +1,14 @@
 #!/usr/local/bin/perl -w
 
-# $Header: /home/kst/calc/calc,v 1.18 1996-12-06 00:38:05-08 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.19 1997-02-12 03:02:47-08 kst Exp $
 
 #
 # Currently valid @stack runs from 1 to $#stack inclusive;
 # Index 0 is not used (and is set to 'BOTTOM')
 #
 
-use subs qw(Dump Show_Vars Numeric Help Check Evaluate Evaluate_Line Factorial);
+use subs qw(Dump Show_Vars Is_Numeric Is_Hex Help Check
+	    Evaluate Evaluate_Line Factorial);
 
 $debugging = defined $ENV{DEBUG};
 
@@ -94,11 +95,17 @@ sub Show_Vars {
     }
 } # end Show_Vars
 
-sub Numeric {
-    local($word) = @_;
+sub Is_Numeric {
+    my($word) = @_;
 
-    $word =~ /^([+-]?)(\d*)(\.(\d*))?([Ee]([+-]?\d+))?$/ && "$2$4" ne '';
-} # end Numeric
+    return $word =~ /^([+-]?)(\d*)(\.(\d*))?([Ee]([+-]?\d+))?$/ && "$2$4" ne '';
+} # end Is_Numeric
+
+sub Is_Hex {
+    my($word) = @_;
+
+    return $word =~ /^0x[\da-f]/i;
+} # end Is_Hex
 
 sub Help {
     print <<'EOF';
@@ -397,8 +404,12 @@ sub Evaluate {
         $inhibit_dump = 1;
     }
 
-    elsif (Numeric $word) {
+    elsif (Is_Numeric $word) {
         push @stack, $word;
+    }
+
+    elsif (Is_Hex $word) {
+	push @stack, hex $word;
     }
 
     else {
