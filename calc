@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-# $Header: /home/kst/calc/calc,v 1.20 1997-03-23 03:10:44-08 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.21 1997-07-12 01:38:09-07 kst Exp $
 
 #
 # Currently valid @stack runs from 1 to $#stack inclusive;
@@ -181,7 +181,7 @@ sub Help {
     Hex               : dump stack in hex
     Octal             : dump stack in octal
     HMS               : dump stack in H:M:S format
-    \\                 : inhibit stack dump
+    \                 : inhibit stack dump
 EOF
 #   print "    ...          : continue (used on command line)"
 } # end Help
