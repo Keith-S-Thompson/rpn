@@ -1,6 +1,6 @@
 #!/user/local/awk -f
 
-# $Header: /home/kst/calc/calc,v 1.7 1993-05-25 20:22:34-07 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.8 1993-06-09 17:10:57-07 kst Exp $
 
 #
 # currently valid stack runs from 1 to tos inclusive
@@ -198,7 +198,6 @@ function eval(word)
     }
 
     else if (word == "log") {
-	printf("[log(10.0) = %g]\n", log(10.0));
 	push(log(pop()) / log(10.0))
     }
 
