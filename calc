@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-# $Header: /home/kst/calc/calc,v 1.29 1997-09-24 23:35:12-07 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.30 1997-11-04 22:16:57-08 kst Exp $
 
 #
 # Currently valid @stack runs from 1 to $#stack inclusive.
@@ -599,7 +599,9 @@ sub Evaluate_Line {
     Debug "DEBUG: evaluate_line \"$line\"\n";
     $inhibit_dump = 0;
 
-    if ($line =~ /^\s*:\s*(.*)$/) {
+    $line =~ s/^\s*//;
+    $line =~ s/\s*$//;
+    if ($line =~ /^:\s*(.*)$/) {
 	$is_eval = 1;
 	Evaluate_String $1;
     }
@@ -611,7 +613,9 @@ sub Evaluate_Line {
 	    Evaluate $arg;
 	}
     }
-    if ($is_eval or ($last_arg ne "," and not $inhibit_dump)) {
+    if ($is_eval or (defined $last_arg and
+		     $last_arg ne "," and
+		     not $inhibit_dump)) {
         Dump 10;
     }
 } # Evaluate_Line
