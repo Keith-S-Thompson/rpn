@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-# $Id: calc,v 1.36 1999-09-21 23:33:47-07 kst Exp $
+# $Id: calc,v 1.37 1999-10-20 14:14:45-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -116,7 +116,7 @@ sub Is_Numeric($) {
     my $arg = $_[0];
     my $warning = undef;
     {
-        local $SIG{__WARN__} = sub { $warning = $_[0] };
+        local $SIG{'__WARN__'} = sub { $warning = $_[0] };
         my $tmp = $arg + 0;
     }
     if (defined $warning) {
@@ -583,7 +583,7 @@ sub Evaluate_String($) {
 
     Debug "DEBUG: \$eval_string = \"$eval_string\"\n";
     {
-        local $SIG{__WARN__} = sub { $warning = $_[0] };
+        local $SIG{'__WARN__'} = sub { $warning = $_[0] };
         {
             no strict;
             $result = eval $eval_string;
