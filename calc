@@ -1,6 +1,6 @@
 #!/user/local/awk -f
 
-# $Header: /home/kst/calc/calc,v 1.9 1993-07-14 16:33:47-07 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.10 1993-07-26 16:37:58-07 kst Exp $
 
 #
 # currently valid stack runs from 1 to tos inclusive
@@ -54,33 +54,33 @@ function numeric(x)
 
 function help()
 {
-    print "    +-*/%^    : arithmetic operators"
-    print "    **        : synonym for ^"
-    print "    --        : negate"
-    print "    //        : reciprocal"
-    print "    dup       : duplicate top of stack (tos)"
-    print "    drop      : drop tos"
-    print "    clear     : clear stack"
-    print "    swap      : swap top two stack elements"
-    print "    sin, cos, tan, asin, acos, atan:"
-    print "                trig functions (radians)"
-    print "    atan2     : atan(y/x)"
-    print "    exp       : e^x"
-    print "    ln        : log base e"
-    print "    log       : log base 10"
-    print "    int       : integer part (truncate towards 0)"
-    print "    srand     : set random seed"
-    print "    srandx    : set random seed to specified value"
-    print "    rand      : random number"
-    print "    sqrt      : square root"
-    print "    vars      : show all variables"
-    print "    <name>=   : assign variable"
-    print "    ofmt=     : show output format"
-    print "    ofmt=<fmt>: set output format"
-    print "    .         : display tos"
-    print "    ,         : dump stack"
-#   print "    ...       : continue (used on command line)"
-    print "    \\         : inhibit stack dump"
+    print "    +,-,*,/,%,** : arithmetic operators"
+    print "    --           : negate"
+    print "    //           : reciprocal"
+    print "    dup          : duplicate top of stack (tos)"
+    print "    drop         : drop tos"
+    print "    clear        : clear stack"
+    print "    swap         : swap top two stack elements"
+    print "    sin, cos, tan, asin, acos, atan   :"
+    print "                   trig functions (radians)"
+    print "    atan2        : atan(y/x)"
+    print "    exp          : e^x"
+    print "    ln,  loge    : log base e"
+    print "    log, log10   : log base 10"
+    print "    lg,  log2    : log base 2"
+    print "    int          : integer part (truncate towards 0)"
+    print "    srand        : set random seed"
+    print "    srandx       : set random seed to specified value"
+    print "    rand         : random number"
+    print "    sqrt         : square root"
+    print "    vars         : show all variables"
+    print "    <name>=      : assign variable"
+    print "    ofmt=        : show output format"
+    print "    ofmt=<fmt>   : set output format"
+    print "    .            : display tos"
+    print "    ,            : dump stack"
+#   print "    ...          : continue (used on command line)"
+    print "    \\            : inhibit stack dump"
 } # end help
 
 function eval(word)
@@ -142,11 +142,15 @@ function eval(word)
 	push(y % x)
     }
 
-    else if (word == "^" || word == "**") {
+    else if (word == "**") {
 	if (tos < 2) { print "/ error: too few arguments" ; return }
 	y = pop()
 	x = pop()
 	push(x ^ y)
+    }
+
+    else if (word == "^") {
+	print "error: use ** for exponentiation"
     }
 
     else if (word == "--") {
@@ -197,8 +201,12 @@ function eval(word)
 	push(log(pop()))
     }
 
-    else if (word == "log") {
+    else if (word == "log" || word == "log10") {
 	push(log(pop()) / log(10.0))
+    }
+
+    else if (word == "lg" || word == "log2") {
+	push(log(pop()) / log(2.0))
     }
 
     else if (word == "int") {
