@@ -1,16 +1,65 @@
 #!/user/kst/bin/perl
 
-# $Header: /home/kst/calc/calc,v 1.13 1994-10-18 05:39:04-07 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.14 1994-12-15 03:25:40-08 kst Exp $
 
 #
 # Currently valid @stack runs from 1 to $#stack inclusive;
 # Index 0 is not used (and is set to 'BOTTOM')
 #
 
+$debugging = defined $ENV{'DEBUG'};
+
+@stack = ('BOTTOM');
+
+%reserved = ( 'acos',   1,
+              'acos',   1,
+              'asin',   1,
+              'atan',   1,
+              'atan2',  1,
+              'clear',  1,
+              'cos',    1,
+              'depth',  1,
+              'drop',   1,
+              'dup',    1,
+              'exp',    1,
+              'help',   1,
+	      'hex',    1,
+	      'Hex',    1,
+              'int',    1,
+              'ln',     1,
+              'log',    1,
+	      'octal',  1,
+	      'Octal',  1,
+              'ofmt',   1,
+              'rand',   1,
+              'sin',    1,
+              'sqrt',   1,
+              'srand',  1,
+              'srandx', 1,
+              'swap',   1,
+              'tan',    1,
+              'vars',   1 );        
+
+$variables{'pi'} = 3.14159265358979323846;
+$variables{'e'}  = 2.71828182845904523536;
+
+$ofmt = '%.16g';
+
+if (@ARGV) {
+    &evaluate_line(join(' ', @ARGV));
+}  else {
+    while (<>) {
+	chop;
+	&evaluate_line($_);
+    }
+}
+
+########################################################################
+
 ## sub pop {
 ##     pop @stack;
 ## } # end sub pop
-## 
+
 ## sub push {
 ##     local($item) = @_;
 ##     push(@stack, $item);
@@ -22,7 +71,7 @@ sub dump {
     local($i);
     local($format);
 
-    ($base == 10) && ($format = "%3d: $#\n");
+    ($base == 10) && ($format = "%3d: $ofmt\n");
     ($base == 16) && ($format = "%3d: 0x%x\n");
     ($base ==  8) && ($format = "%3d: 0%o\n");
 
@@ -39,7 +88,7 @@ sub dump {
 
 sub show_vars {
     foreach $name (sort keys %variables) {
-	printf("%-8s = $#\n", $name, $variables{$name});
+	printf("%-8s = $ofmt\n", $name, $variables{$name});
     }
 } # end sub show_vars
 
@@ -271,11 +320,11 @@ sub evaluate {
     }
 
     elsif ( $word =~ /^ofmt=$/ ) {
-	print "output format = \"$#\"\n";
+	print "output format = \"$ofmt\"\n";
     }
 
     elsif ( $word =~ /^ofmt=(.*)$/ ) {
-	$# = $1;
+	$ofmt = $1;
     }
 
     elsif ($word =~ /^(.*)=$/) {
@@ -298,7 +347,7 @@ sub evaluate {
 
     elsif ($word eq '.') {
 	&check(1) && do {
-	    print pop(@stack), "\n";
+	    printf "$ofmt\n", pop(@stack);
 	    $inhibit_dump = 1;
 	}
     }
@@ -313,10 +362,11 @@ sub evaluate {
     elsif ($word eq 'octal') {
         &check(1) && do {
             #
-	    # Mysterious bug, drops '0' and newline
+	    # Workaround for mysterious bug, drops '0' and newline
 	    #
-	    # printf("0%o\n", int(pop(@stack)));
-	    print "0", sprintf("%o", int(pop(@stack))), "\n";
+	    # print "0", sprintf("%o", int(pop(@stack))), "\n";
+	    # Commented out workaround; no longer needed
+	    printf("0%o\n", int(pop(@stack)));
             $inhibit_dump = 1;
         }
     }
@@ -363,54 +413,5 @@ sub evaluate_line {
     }
     if ($last_arg ne "," && ! $inhibit_dump) {
 	&dump(10);
-    }
-}
-
-########################################################################
-
-$debugging = defined $ENV{'DEBUG'};
-
-@stack = ('BOTTOM');
-
-%reserved = ( 'acos',   1,
-              'acos',   1,
-              'asin',   1,
-              'atan',   1,
-              'atan2',  1,
-              'clear',  1,
-              'cos',    1,
-              'depth',  1,
-              'drop',   1,
-              'dup',    1,
-              'exp',    1,
-              'help',   1,
-	      'hex',    1,
-	      'Hex',    1,
-              'int',    1,
-              'ln',     1,
-              'log',    1,
-	      'octal',  1,
-	      'Octal',  1,
-              'ofmt',   1,
-              'rand',   1,
-              'sin',    1,
-              'sqrt',   1,
-              'srand',  1,
-              'srandx', 1,
-              'swap',   1,
-              'tan',    1,
-              'vars',   1 );        
-
-$variables{'pi'} = 3.14159265358979323846;
-$variables{'e'}  = 2.71828182845904523536;
-
-$# = '%.16g';
-
-if (@ARGV) {
-    &evaluate_line(join(' ', @ARGV));
-}  else {
-    while (<>) {
-	chop;
-	&evaluate_line($_);
     }
 }
