@@ -1,6 +1,6 @@
 #!/user/kst/bin/perl
 
-# $Header: /home/kst/calc/calc,v 1.12 1994-02-04 02:48:02-08 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.13 1994-10-18 05:39:04-07 kst Exp $
 
 #
 # Currently valid @stack runs from 1 to $#stack inclusive;
@@ -129,7 +129,7 @@ sub evaluate {
 
     elsif ($word eq '+') {
 	&check(2) && do {
-	    push(@stack, pop @stack + pop @stack);
+	    push(@stack, (pop @stack) + (pop @stack));
 	}
     }
 
@@ -142,7 +142,7 @@ sub evaluate {
 
     elsif ($word eq '*') {
 	&check(2) && do {
-	    push(@stack, pop @stack * pop @stack);
+	    push(@stack, (pop @stack) * (pop @stack));
 	}
     }
 
