@@ -1,346 +1,412 @@
-#!/user/local/awk -f
+#!/user/kst/bin/perl
 
-# $Header: /home/kst/calc/calc,v 1.10 1993-07-26 16:37:58-07 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.11 1994-02-04 02:19:39-08 kst Exp $
 
 #
-# currently valid stack runs from 1 to tos inclusive
+# Currently valid @stack runs from 1 to $#stack inclusive;
+# Index 0 is not used (and is set to 'BOTTOM')
 #
 
-function pop()
-{
-    return stack[tos--]
-} # end pop
+## sub pop {
+##     pop @stack;
+## } # end sub pop
+## 
+## sub push {
+##     local($item) = @_;
+##     push(@stack, $item);
+## } # end sub push
 
-function push(item)
-{
-    stack[++tos] = item
-} # end push
+sub dump {
+    local($base) = @_;
 
-function dump()
-{
-    if (tos > 0) {
-	for (temp = 1; temp <= tos; temp ++) {
-	    printf("%3d: ", temp)
-	    print stack[temp]
+    local($i);
+    local($format);
+
+    ($base == 10) && ($format = "%3d: $#\n");
+    ($base == 16) && ($format = "%3d: 0x%x\n");
+    ($base ==  8) && ($format = "%3d: 0%o\n");
+
+    if ($#stack) {
+	for ($i = 1; $i <= $#stack; $i ++) {
+	    # printf("%3d: %s\n", $i, $stack[$i]);
+	    printf($format, $i, $stack[$i]);
 	}
     }
     else {
-	print "  <empty stack>"
+	print "  <empty stack>\n";
     }
-} # end dump
+} # end sub dump
 
-function show_vars()
-{
-    for (name in variables) {
-	printf("%-8s = ", name);
-	print(variables[name])
+sub show_vars {
+    foreach $name (sort keys %variables) {
+	printf("%-8s = $#\n", $name, $variables{$name});
     }
-} # end show_vars
+} # end sub show_vars
 
-function numeric(x)
-{
-    if (x + 0 == 0) {
-	if (x == 0) {
-	    return 1
-	}
-	else {
-	    return 0
-	}
-    }
-    else {
-	return 1
-    }
-} # end numeric
+sub numeric {
+    local($word) = @_;
 
-function help()
-{
-    print "    +,-,*,/,%,** : arithmetic operators"
-    print "    --           : negate"
-    print "    //           : reciprocal"
-    print "    dup          : duplicate top of stack (tos)"
-    print "    drop         : drop tos"
-    print "    clear        : clear stack"
-    print "    swap         : swap top two stack elements"
-    print "    sin, cos, tan, asin, acos, atan   :"
-    print "                   trig functions (radians)"
-    print "    atan2        : atan(y/x)"
-    print "    exp          : e^x"
-    print "    ln,  loge    : log base e"
-    print "    log, log10   : log base 10"
-    print "    lg,  log2    : log base 2"
-    print "    int          : integer part (truncate towards 0)"
-    print "    srand        : set random seed"
-    print "    srandx       : set random seed to specified value"
-    print "    rand         : random number"
-    print "    sqrt         : square root"
-    print "    vars         : show all variables"
-    print "    <name>=      : assign variable"
-    print "    ofmt=        : show output format"
-    print "    ofmt=<fmt>   : set output format"
-    print "    .            : display tos"
-    print "    ,            : dump stack"
+    $word =~ /^([+-]?)(\d*)(\.(\d*))?([Ee]([+-]?\d+))?$/ && "$2$4" ne '';
+}
+
+sub help {
+    print <<'EOF';
+    +, -, *, /, %, ** : arithmetic operators
+    --                : negate
+    //                : reciprocal
+    %%                : / and %
+    dup               : duplicate top of stack (tos)
+    drop              : drop tos
+    clear             : clear stack
+    swap              : swap top two stack elements
+    sin, cos, tan, asin, acos, atan :
+                        trig functions (radians)
+    atan2             : atan(y/x)
+    exp               : e^x
+    ln,  loge         : log base e
+    log, log10        : log base 10
+    lg,  log2         : log base 2
+    int               : integer part (truncate towards 0)
+    srand             : set random seed
+    srandx            : set random seed to specified value
+    rand              : random number
+    sqrt              : square root
+    vars              : show all variables
+    <name>=           : assign variable
+    ofmt=             : show output format
+    ofmt=<fmt>        : set output format
+    .                 : display tos
+    hex               : display tos in hex
+    octal             : display tos in octal
+    ,                 : dump stack
+    Hex               : dump stack in hex
+    Octal             : dump stack in octal
+    \\                 : inhibit stack dump
+EOF
 #   print "    ...          : continue (used on command line)"
-    print "    \\            : inhibit stack dump"
-} # end help
+} # end sub help
 
-function eval(word)
-{
-    if (word == "dup") {
-	if (tos < 1) { print "dup error: empty stack" ; return }
-	push(stack[tos])
+sub check {
+    local($count) = @_;
+
+    if ($#stack >= $count) {
+	1;
+    } else {
+	warn "$word error: too few arguments\n";
+	0;
+    }
+}
+
+sub evaluate {
+    # local($word) = @_;
+    ($word) = @_;	# not local, used by &check
+
+    print "DEBUG: evaluate \"$word\"\n" if $debugging;
+
+    if ($word eq 'dup') {
+	&check(1) && push(@stack, $stack[$#stack]);
     }
 
-    else if (word == "drop") {
-	if (tos < 1) { print "drop error: empty stack" ; return }
-	pop()
+    elsif ($word eq 'drop') {
+	&check(1) && pop @stack;
     }
 
-    else if (word == "clear") {
-	tos = 0
+    elsif ($word eq 'clear') {
+	$#stack = 0;
     }
 
-    else if (word == "depth") {
-	push(tos)
+    elsif ($word eq 'depth') {
+	push(@stack, $#stack);
     }
 
-    else if (word == "swap") {
-	if (tos < 2) { print "swap error: too few arguments" ; return }
-	temp1 = pop()
-	temp2 = pop()
-	push(temp1)
-	push(temp2)
+    elsif ($word eq 'swap') {
+	&check(2) && do {
+	    local($temp1, $temp2) = (pop @stack, pop @stack);
+	    push(@stack, $temp1);
+	    push(@stack, $temp2);
+	}
     }
 
-    else if (word == "+") {
-	if (tos < 2) { print "+ error: too few arguments" ; return }
-	push(pop()+pop())
+    elsif ($word eq '+') {
+	&check(2) && do {
+	    push(@stack, pop @stack + pop @stack);
+	}
     }
 
-    else if (word == "-") {
-	if (tos < 2) { print "- error: too few arguments" ; return }
-	y = pop()
-	x = pop()
-	push(x - y)
+    elsif ($word eq '-') {
+	&check(2) && do {
+	    local($y, $x) = (pop @stack, pop @stack);
+	    push(@stack, $x - $y);
+	}
     }
 
-    else if (word == "*") {
-	if (tos < 2) { print "* error: too few arguments" ; return }
-	push(pop() * pop())
+    elsif ($word eq '*') {
+	&check(2) && do {
+	    push(@stack, pop @stack * pop @stack);
+	}
     }
 
-    else if (word == "/") {
-	if (tos < 2) { print "/ error: too few arguments" ; return }
-	y = pop()
-	x = pop()
-	push(x / y)
+    elsif ($word eq '/') {
+	&check(2) && do {
+	    local($y, $x) = (pop @stack, pop @stack);
+	    push(@stack, $x / $y);
+	}
     }
 
-    else if (word == "%") {
-	if (tos < 2) { print "% error: too few arguments" ; return }
-	y = pop()
-	x = pop()
-	push(y % x)
+    elsif ($word eq '%') {
+	&check(2) && do {
+	    local($y, $x) = (pop @stack, pop @stack);
+	    push(@stack, $x % $y);
+	}
     }
 
-    else if (word == "**") {
-	if (tos < 2) { print "/ error: too few arguments" ; return }
-	y = pop()
-	x = pop()
-	push(x ^ y)
+    elsif ($word eq '**') {
+	&check(2) && do {
+	    local($y, $x) = (pop @stack, pop @stack);
+	    push(@stack, $x ** $y);
+	}
     }
 
-    else if (word == "^") {
-	print "error: use ** for exponentiation"
+    elsif ($word eq '^') {
+	warn "error: use ** for exponentiation\n";
     }
 
-    else if (word == "--") {
-	push(-pop())
+    elsif ($word eq '--') {
+	&check(1) && push(@stack, - pop @stack);
     }
 
-    else if (word == "//") {
-	push(1.0/pop())
+    elsif ($word eq '//') {
+	&check(1) && push(@stack, 1.0 / pop @stack);
     }
 
-    else if (word == "sin") {
-	push(sin(pop()))
+    elsif ($word eq '%%') {
+	if (&check(2)) {
+	    local($y, $x) = (pop @stack, pop @stack);
+	    push(@stack, int($x / $y), $x % $y);
+	}
     }
 
-    else if (word == "cos") {
-	push(cos(pop()))
+    elsif ($word eq 'sin') {
+	&check(1) && push(@stack, sin(pop @stack));
     }
 
-    else if (word == "tan") {
-	x = pop()
-	push(sin(x) / cos(x))
+    elsif ($word eq 'cos') {
+	&check(1) && push(@stack, cos(pop @stack));
     }
 
-    else if (word == "asin") {
-	x = pop()
-	push(atan2(x, sqrt(1 - x * x)))
+    elsif ($word eq 'tan') {
+	&check(1) && do {
+	    local($x) = pop @stack;
+	    push(@stack, sin($x) / cos($x));
+	}
     }
 
-    else if (word == "acos") {
-	x = pop()
-	push(atan2(sqrt(1 - x * x), x))
+    elsif ($word eq 'asin') {
+	&check(1) && do {
+	    local($x) = pop @stack;
+	    push(@stack, atan2($x, sqrt(1 - $x**2)));
+	}
     }
 
-    else if (word == "atan") {
-	push(atan2(pop(), 1.0))
+    elsif ($word eq 'acos') {
+	&check(1) && do {
+	    local($x) = pop @stack;
+	    push(@stack, atan2(sqrt(1 - $x**2), $x));
+	}
     }
 
-    else if (word == "atan2") {
-	x = pop()
-	push(atan2(pop(), x))
+    elsif ($word eq 'atan') {
+	&check(1) && push(@stack, atan2(pop @stack, 1.0));
     }
 
-    else if (word == "exp") {
-	push(exp(pop()))
+    elsif ($word eq 'atan2') {
+	&check(2)  && do {
+	    local($y, $x) = (pop @stack, pop @stack);
+	    push(@stack, atan2($x, $y));
+	}
     }
 
-    else if (word == "ln") {
-	push(log(pop()))
+    elsif ($word eq 'exp') {
+	&check(1) && push(@stack, exp(pop @stack));
     }
 
-    else if (word == "log" || word == "log10") {
-	push(log(pop()) / log(10.0))
+    elsif ($word eq 'ln' || $word eq 'loge') {
+	&check(1) && push(@stack, log(pop @stack));
     }
 
-    else if (word == "lg" || word == "log2") {
-	push(log(pop()) / log(2.0))
+    elsif ($word eq 'log' || $word eq 'log10') {
+	&check(1) && push(@stack, log(pop @stack) / log(10.0));
     }
 
-    else if (word == "int") {
-	push(int(pop()))
+    elsif ($word eq 'lg' || $word eq 'log2') {
+	&check(1) && push(@stack, log(pop @stack) / log(2.0));
     }
 
-    else if (word == "srandx") {
-	srand(pop())
+    elsif ($word eq 'int') {
+	&check(1) && push(@stack, int(pop @stack));
     }
 
-    else if (word == "srand") {
-	srand()
+    elsif ($word eq 'srandx') {
+	&check(1) && srand(pop(@stack));
     }
 
-    else if (word == "rand") {
-	push(rand())
+    elsif ($word eq 'srand') {
+	srand(time^$$);
     }
 
-    else if (word == "sqrt") {
-	push(sqrt(pop()))
+    elsif ($word eq 'rand') {
+	push(@stack, rand);
     }
 
-    else if (word == "vars") {
-	show_vars()
+    elsif ($word eq 'randx') {
+	&check(1) && push(@stack, rand(pop(@stack)));
     }
 
-    else if ( word ~ "^ofmt=$" ) {
-	printf("output format == \"%s\"\n", OFMT)
+    elsif ($word eq 'sqrt') {
+	&check(1) && push(@stack, sqrt(pop(@stack)));
     }
 
-    else if ( word ~ "^ofmt=" ) {
-	OFMT = substr(word, 6)
+    elsif ($word eq 'vars') {
+	&show_vars;
     }
 
-    else if (word ~ "=$") {
-	var_name = substr(word, 1, length(word)-1)
-	if (var_name in reserved) { print "= error: reserved name" ; return }
-	variables[var_name] = pop()
+    elsif ( $word =~ /^ofmt=$/ ) {
+	print "output format = \"$#\"\n";
     }
 
-    else if (word in variables) {
-	push(variables[word])
+    elsif ( $word =~ /^ofmt=(.*)$/ ) {
+	$# = $1;
     }
 
-    else if (word == "?" || word == "help") {
-	help()
-	inhibit_dump = 1
+    elsif ($word =~ /^(.*)=$/) {
+	local($var_name) = $1;
+	if (defined $reserved{$var_name}) {
+	    print "= error: reserved name\n";
+	} else {
+	    &check(1) && ($variables{$var_name} = pop(@stack));
+	}
     }
 
-    else if (word == ".") {
-	if (tos < 1) { print ". error: empty stack" ; return }
-	print pop()
-	inhibit_dump = 1
+    elsif (defined $variables{$word}) {
+	push(@stack, $variables{$word});
     }
 
-    else if (word == ",") {
-	dump()
+    elsif ($word eq '?' || $word eq 'help') {
+	&help();
+	$inhibit_dump = 1;
+    }
+
+    elsif ($word eq '.') {
+	&check(1) && do {
+	    print pop(@stack), "\n";
+	    $inhibit_dump = 1;
+	}
+    }
+
+    elsif ($word eq 'hex') {
+	&check(1) && do {
+	    printf("0x%x\n", int(pop(@stack)));
+	    $inhibit_dump = 1;
+	}
+    }
+
+    elsif ($word eq 'octal') {
+	&check(1) && do {
+	    printf("0%o\n", int(pop(@stack)));
+	    $inhibit_dump = 1;
+	}
+    }
+
+    elsif ($word eq ',') {
+	&dump(10);
+    }
+
+    elsif ($word eq 'Hex') {
+	&dump(16);
+    }
+
+    elsif ($word eq 'Octal') {
+	&dump(8);
     }
 
 #   else if (word == "...") {
 #       Continue = 1
 #   }
 
-    else if (word == "\\") {
-	inhibit_dump = 1
+    elsif ($word eq '\\') {
+	$inhibit_dump = 1;
     }
 
-    else if (numeric(word)) {
-	tos++
-	stack[tos] = word + 0
+    elsif (&numeric($word)) {
+	push(@stack, $word);
     }
 
     else {
-        print "error: unrecognized word " word
+	print STDERR "error: unrecognized word $word\n";
     }
-} #  end eval
+} #  end sub evaluate
 
-BEGIN	{
-	    tos = 0
+sub evaluate_line {
+    local($line) = @_;
 
-	    reserved["acos"]   = 1
-	    reserved["asin"]   = 1
-	    reserved["atan"]   = 1
-	    reserved["atan2"]  = 1
-	    reserved["clear"]  = 1
-	    reserved["cos"]    = 1
-	    reserved["depth"]  = 1
-	    reserved["drop"]   = 1
-	    reserved["dup"]    = 1
-	    reserved["exp"]    = 1
-	    reserved["help"]   = 1
-	    reserved["int"]    = 1
-	    reserved["ln"]     = 1
-	    reserved["log"]    = 1
-	    reserved["ofmt"]   = 1
-	    reserved["rand"]   = 1
-	    reserved["sin"]    = 1
-	    reserved["sqrt"]   = 1
-	    reserved["srand"]  = 1
-	    reserved["srandx"] = 1
-	    reserved["swap"]   = 1
-	    reserved["tan"]    = 1
-	    reserved["vars"]   = 1
+    print "DEBUG: evaluate_line \"$line\"\n" if $debugging;
+    $inhibit_dump = 0;
 
-	    variables["pi"] = 3.14159265358979323846
-	    variables["e"]  = 2.71828182845904523536
+    foreach $arg (split(/\s+/, $line)) {
+	$last_arg = $arg;
+	print "DEBUG: calling evaluate \"$arg\"\n" if $debugging;
+	&evaluate($arg);
+    }
+    if ($last_arg ne "," && ! $inhibit_dump) {
+	&dump(10);
+    }
+}
 
-	    OFMT = "%.16g"
+########################################################################
 
-	    if (ARGC > 1) {
-	        arg_string = ""
-	        for (i = 1; i < ARGC; i ++) {
-		    arg_string = arg_string " " ARGV[i]
-		}
-		split(arg_string, arg_list, " ");
-		for (i = 1; i in arg_list; i ++) {
-		    arg = arg_list[i]
-		    eval(arg)
-		}
-		if (arg != "," && ! inhibit_dump) {
-		    dump()
-		}
-#		if (! Continue) {
-		    exit
-#		}
-	    }
-	} # end BEGIN block
+$debugging = defined $ENV{'DEBUG'};
 
-	{ # main loop
-	    inhibit_dump = 0
-	    for (i = 1; i <= NF; i ++) {
-		eval($i)
-	    }
-	    if ($NF != "," && ! inhibit_dump) {
-		dump()
-	    }
-	} # end main loop
+@stack = ('BOTTOM');
+
+%reserved = ( 'acos',   1,
+              'acos',   1,
+              'asin',   1,
+              'atan',   1,
+              'atan2',  1,
+              'clear',  1,
+              'cos',    1,
+              'depth',  1,
+              'drop',   1,
+              'dup',    1,
+              'exp',    1,
+              'help',   1,
+	      'hex',    1,
+	      'Hex',    1,
+              'int',    1,
+              'ln',     1,
+              'log',    1,
+	      'octal',  1,
+	      'Octal',  1,
+              'ofmt',   1,
+              'rand',   1,
+              'sin',    1,
+              'sqrt',   1,
+              'srand',  1,
+              'srandx', 1,
+              'swap',   1,
+              'tan',    1,
+              'vars',   1 );        
+
+$variables{'pi'} = 3.14159265358979323846;
+$variables{'e'}  = 2.71828182845904523536;
+
+$# = '%.16g';
+
+if (@ARGV) {
+    &evaluate_line(join(' ', @ARGV));
+}  else {
+    while (<>) {
+	chop;
+	&evaluate_line($_);
+    }
+}
