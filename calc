@@ -1,6 +1,6 @@
-#!/usr/local/bin/perl -w
+#!/usr/local/bin/perl5.6.0 -w
 
-# $Id: calc,v 1.38 1999-11-09 01:42:13-08 kst Exp $
+# $Id: calc,v 1.39 2000-08-24 23:47:57-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
