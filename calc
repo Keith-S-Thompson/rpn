@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-# $Header: /home/kst/calc/calc,v 1.23 1997-08-07 23:52:06-07 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.24 1997-09-14 16:29:45-07 kst Exp $
 
 #
 # Currently valid @stack runs from 1 to $#stack inclusive;
@@ -111,11 +111,24 @@ sub Show_Vars {
 } # end Show_Vars
 
 sub Is_Numeric {
-    my($word) = @_;
-
-    return ($word =~ /^([+-]?)(\d*)(\.(\d*))?([Ee]([+-]?\d+))?$/) and
-	   (defined $2 or defined $4);
-} # end Is_Numeric
+    my $arg = $_[0];
+    my $warning = undef;
+    {
+        local $SIG{__WARN__} = sub { $warning = $_[0] };
+        my $tmp = $arg + 0;
+    }
+    if (defined $warning) {
+        if ($warning =~ /numeric/) {
+            return 0; # non-numeric
+        }
+        else {
+            warn $warning; # some other warning (?)
+        }
+    }
+    else {
+        return 1; # numeric
+    }
+} # Is_Numeric
 
 sub Is_HMS {
     my($word) = @_;
