@@ -1,6 +1,6 @@
 #!/user/local/awk -f
 
-# $Header: /home/kst/calc/calc,v 1.8 1993-06-09 17:10:57-07 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.9 1993-07-14 16:33:47-07 kst Exp $
 
 #
 # currently valid stack runs from 1 to tos inclusive
@@ -177,7 +177,7 @@ function eval(word)
 
     else if (word == "acos") {
 	x = pop()
-	push(pi_over_2 - atan2(x, sqrt(1 - x * x)))
+	push(atan2(sqrt(1 - x * x), x))
     }
 
     else if (word == "atan") {
@@ -304,7 +304,6 @@ BEGIN	{
 	    reserved["vars"]   = 1
 
 	    variables["pi"] = 3.14159265358979323846
-	    pi_over_2 = variables["pi"] / 2.0
 	    variables["e"]  = 2.71828182845904523536
 
 	    OFMT = "%.16g"
