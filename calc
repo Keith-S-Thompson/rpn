@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-# $Header: /home/kst/calc/calc,v 1.17 1996-08-16 04:35:37-07 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.18 1996-12-06 00:38:05-08 kst Exp $
 
 #
 # Currently valid @stack runs from 1 to $#stack inclusive;
@@ -42,8 +42,8 @@ $debugging = defined $ENV{DEBUG};
               'tan'    => 1,
               'vars'   => 1 );
 
-$variables{pi} = 3.14159265358979323846;
-$variables{e}  = 2.71828182845904523536;
+$variables{'pi'} = 3.14159265358979323846;
+$variables{'e'}  = 2.71828182845904523536;
 
 $ofmt = '%.16g';
 
