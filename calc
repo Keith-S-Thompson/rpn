@@ -1,6 +1,6 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/perl -w
 
-# $Header: /home/kst/calc/calc,v 1.32 1997-12-06 14:21:13-08 tools Exp $
+# $Header: /home/kst/calc/calc,v 1.33 1998-08-15 18:54:25-07 tools Exp $
 
 #
 # Currently valid @stack runs from 1 to $#stack inclusive.
@@ -255,15 +255,16 @@ sub Evaluate {
 
     elsif ($word eq 'swap') {
         Check $word, 2 and do {
-            my($temp1, $temp2) = (pop @stack, pop @stack);
-            push @stack, $temp1;
-            push @stack, $temp2;
+            my($y, $x) = (pop @stack, pop @stack);
+            push @stack, $y;
+            push @stack, $x;
         };
     }
 
     elsif ($word eq '+') {
         Check $word, 2 and do {
-            push @stack, pop(@stack) + pop(@stack);
+	    my($y, $x) = (pop @stack, pop @stack);
+            push @stack, $x + $y;
         };
     }
 
@@ -276,7 +277,8 @@ sub Evaluate {
 
     elsif ($word eq '*') {
         Check $word, 2 and do {
-            push @stack, pop(@stack) * pop(@stack);
+            my($y, $x) = (pop @stack, pop @stack);
+            push @stack, $x * $y;
         };
     }
 
@@ -302,11 +304,17 @@ sub Evaluate {
     }
 
     elsif ($word eq '--') {
-        Check $word, 1 and push @stack, - pop @stack;
+        Check $word, 1 and do {
+	    my($x) = pop @stack;
+	    push @stack, - $x;
+	}
     }
 
     elsif ($word eq '//') {
-        Check $word, 1 and push @stack, 1.0 / pop @stack;
+        Check $word, 1 and do {
+	    my($x) = pop @stack;
+	    push @stack, 1.0 / $x;
+	}
     }
 
     elsif ($word eq '%%') {
@@ -322,15 +330,24 @@ sub Evaluate {
     #
 
     elsif ($word eq '&') {
-	Check $word, 2 and push @stack, (0 + pop @stack) & (0 + pop @stack);
+	Check $word, 2 and do {
+            my($y, $x) = (pop @stack, pop @stack);
+	    push @stack, (0 + $x) & (0 + $y);
+	}
     }
 
     elsif ($word eq '|') {
-	Check $word, 2 and push @stack, (0 + pop @stack) | (0 + pop @stack);
+	Check $word, 2 and do {
+            my($y, $x) = (pop @stack, pop @stack);
+	    push @stack, (0 + $x) | (0 + $y);
+	}
     }
 
     elsif ($word eq '^') {
-	Check $word, 2 and push @stack, (0 + pop @stack) ^ (0 + pop @stack);
+	Check $word, 2 and do {
+            my($y, $x) = (pop @stack, pop @stack);
+	    push @stack, (0 + $x) ^ (0 + $y);
+	}
     }
 
     elsif ($word eq '~') {
