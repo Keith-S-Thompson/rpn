@@ -1,0 +1,214 @@
+#!/user/local/awk -f
+
+# $Header: /home/kst/calc/calc,v 1.1 1992-11-02 08:10:32-08 kst Exp $
+
+#
+# currently valid stack runs from 1 to tos inclusive
+#
+
+function pop()
+{
+    return stack[tos--]
+}
+
+function push(item)
+{
+    stack[++tos] = item
+}
+
+function dump()
+{
+    if (tos > 0)
+    {
+	for (temp = 1; temp <= tos; temp ++)
+	{
+	    printf("%3d: ", temp)
+	    print stack[temp]
+	}
+    }
+    else
+    {
+	print "  <empty stack>"
+    }
+}
+
+function eval(word)
+{
+    if (word == "dup")
+    {
+	if (tos < 1) { print "dup error: empty stack" ; return }
+	push(stack[tos])
+    }
+
+    else if (word == "drop")
+    {
+	if (tos < 1) { print "drop error: empty stack" ; return }
+	pop()
+    }
+
+    else if (word == "clear")
+    {
+	tos = 0
+    }
+
+    else if (word == "depth")
+    {
+	push(tos)
+    }
+
+    else if (word == "swap")
+    {
+	if (tos < 2) { print "swap error: too few arguments" ; return }
+	temp1 = pop()
+	temp2 = pop()
+	push(temp1)
+	push(temp2)
+    }
+
+    else if (word == "+")
+    {
+	if (tos < 2) { print "+ error: too few arguments" ; return }
+	push(pop()+pop())
+    }
+
+    else if (word == "-")
+    {
+	if (tos < 2) { print "- error: too few arguments" ; return }
+	y = pop()
+	x = pop()
+	push(x - y)
+    }
+
+    else if (word == "*")
+    {
+	if (tos < 2) { print "* error: too few arguments" ; return }
+	push(pop() * pop())
+    }
+
+    else if (word == "/")
+    {
+	if (tos < 2) { print "/ error: too few arguments" ; return }
+	y = pop()
+	x = pop()
+	push(x / y)
+    }
+
+    else if (word == "%")
+    {
+	if (tos < 2) { print "/ error: too few arguments" ; return }
+	y = pop()
+	x = pop()
+	push(y % x)
+    }
+
+    else if (word == "^")
+    {
+	if (tos < 2) { print "/ error: too few arguments" ; return }
+	y = pop()
+	x = pop()
+	push(x ^ y)
+    }
+
+    else if (word == "sin")
+    {
+	push(sin(pop()))
+    }
+
+    else if (word == "cos")
+    {
+	push(cos(pop()))
+    }
+
+    else if (word == "tan")
+    {
+	x = pop()
+	push(sin(x) / cos(x))
+    }
+
+    else if (word == "asin")
+    {
+	print "asin error: not yet implemented"
+    }
+
+    else if (word == "acos")
+    {
+	print "acos error: not yet implemented"
+    }
+
+    else if (word == "atan")
+    {
+	push(atan2(pop(), 1.0))
+    }
+
+    else if (word == "atan2")
+    {
+	push(atan2(pop(), pop()))
+    }
+
+    else if (word == "exp")
+    {
+	push(exp(pop()))
+    }
+
+    else if (word == "ln")
+    {
+	push(log(pop()))
+    }
+
+    else if (word == "log")
+    {
+	push(log(pop() / log(10.0)))
+    }
+
+    else if (word == "int")
+    {
+	push(int(pop()))
+    }
+
+    else if (word == "srand")
+    {
+	srand(pop())
+    }
+
+    else if (word == "rand")
+    {
+	push(rand())
+    }
+
+    else if (word == "sqrt")
+    {
+	push(sqrt(pop()))
+    }
+
+    else if (word == ".")
+    {
+	if (tos < 1) { print ". error: empty stack" ; return }
+	print pop()
+    }
+
+    else if (word == ",")
+    {
+	dump()
+    }
+
+    else
+    {
+	tos++
+	stack[tos] = word + 0
+    }
+}
+
+BEGIN	{
+	    tos = 0
+	}
+
+{
+    for (i = 1; i <= NF; i ++)
+    {
+	eval($i)
+    }
+    if ($NF != ",")
+    {
+	dump()
+    }
+}
