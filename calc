@@ -1,6 +1,6 @@
 #!/user/local/awk -f
 
-# $Header: /home/kst/calc/calc,v 1.1 1992-11-02 08:10:32-08 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.2 1992-11-20 15:53:19-08 kst Exp $
 
 #
 # currently valid stack runs from 1 to tos inclusive
@@ -30,6 +30,54 @@ function dump()
     {
 	print "  <empty stack>"
     }
+}
+
+function show_vars()
+{
+    for (name in variables)
+    {
+	printf("%-8s = ", name);
+	print(variables[name])
+    }
+}
+
+function numeric(x)
+{
+    if (x + 0 == 0)
+    {
+	if (x == 0)
+	    return 1
+	else
+	    return 0
+    }
+    else
+	return 1
+}
+
+function help()
+{
+    print "    +-*/%^:     arithmetic operators"
+    print "    dup:        duplicate top of stack (tos)"
+    print "    drop:       drop tos"
+    print "    clear:      clear stack"
+    print "    swap:       swap top two stack elements"
+    print "    sin, cos, tan, asin, acos, atan:"
+    print "                trig functions (radians)"
+    print "    atan2:      atan(y/x)"
+    print "    exp:        e^x"
+    print "    ln:         log base e"
+    print "    log:        log base 10"
+    print "    int:        integer part (truncate towards 0)"
+    print "    srand:      set random seed"
+    print "    rand:       random number"
+    print "    sqrt:       square root"
+    print "    vars:       show all variables"
+    print "    <name>=:    assign variable"
+    print "    ofmt=:      show output format"
+    print "    ofmt=<fmt>: set output format"
+    print "    .:          display tos"
+    print "    ,:          dump stack"
+    print "    \\:          inhibit stack dump"
 }
 
 function eval(word)
@@ -127,12 +175,16 @@ function eval(word)
 
     else if (word == "asin")
     {
-	print "asin error: not yet implemented"
+	# print "asin error: not yet implemented"
+	x = pop()
+	push(atan2(x, sqrt(1 - x * x)))
     }
 
     else if (word == "acos")
     {
-	print "acos error: not yet implemented"
+	# print "acos error: not yet implemented"
+	x = pop()
+	push(pi_over_2 - atan2(x, sqrt(1 - x * x)))
     }
 
     else if (word == "atan")
@@ -157,7 +209,8 @@ function eval(word)
 
     else if (word == "log")
     {
-	push(log(pop() / log(10.0)))
+	printf("[log(10.0) = %g]\n", log(10.0));
+	push(log(pop()) / log(10.0))
     }
 
     else if (word == "int")
@@ -180,6 +233,38 @@ function eval(word)
 	push(sqrt(pop()))
     }
 
+    else if (word == "vars")
+    {
+	show_vars()
+    }
+
+    else if ( word ~ "^ofmt=$" )
+    {
+	printf("output format == \"%s\"\n", OFMT)
+    }
+
+    else if ( word ~ "^ofmt=" )
+    {
+	OFMT = substr(word, 6)
+    }
+
+    else if (word ~ "=$")
+    {
+	var_name = substr(word, 1, length(word)-1)
+	if (var_name in reserved) { print "= error: reserved name" ; return }
+	variables[var_name] = pop()
+    }
+
+    else if (word in variables)
+    {
+	push(variables[word])
+    }
+
+    else if (word == "?" || word == "help")
+    {
+	help()
+    }
+
     else if (word == ".")
     {
 	if (tos < 1) { print ". error: empty stack" ; return }
@@ -191,23 +276,61 @@ function eval(word)
 	dump()
     }
 
-    else
+    else if (word == "\\")
+    {
+	inhibit_dump = 1
+    }
+
+    else if (numeric(word))
     {
 	tos++
 	stack[tos] = word + 0
+    }
+
+    else
+    {
+      print "error: unrecognized word " word
     }
 }
 
 BEGIN	{
 	    tos = 0
+
+	    reserved["acos"]  = 1
+	    reserved["asin"]  = 1
+	    reserved["atan"]  = 1
+	    reserved["atan2"] = 1
+	    reserved["clear"] = 1
+	    reserved["cos"]   = 1
+	    reserved["depth"] = 1
+	    reserved["drop"]  = 1
+	    reserved["dup"]   = 1
+	    reserved["exp"]   = 1
+	    reserved["help"]  = 1
+	    reserved["int"]   = 1
+	    reserved["ln"]    = 1
+	    reserved["log"]   = 1
+	    reserved["ofmt"]  = 1
+	    reserved["rand"]  = 1
+	    reserved["sin"]   = 1
+	    reserved["sqrt"]  = 1
+	    reserved["srand"] = 1
+	    reserved["swap"]  = 1
+	    reserved["tan"]   = 1
+	    reserved["vars"]  = 1
+
+	    variables["pi"] = 3.14159265358979323846
+	    pi_over_2 = variables["pi"] / 2.0
+	    variables["e"]  = 2.71828182845904523536
 	}
 
 {
+    inhibit_dump = 0
     for (i = 1; i <= NF; i ++)
     {
 	eval($i)
     }
-    if ($NF != ",")
+    if ($NF != "," && ! inhibit_dump)
     {
 	dump()
     }
