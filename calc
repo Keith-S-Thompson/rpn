@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-# $Header: /home/kst/calc/calc,v 1.27 1997-09-14 17:01:55-07 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.28 1997-09-14 17:28:31-07 kst Exp $
 
 #
 # Currently valid @stack runs from 1 to $#stack inclusive.
@@ -173,6 +173,7 @@ sub Help {
     --                : negate
     //                : reciprocal
     %%                : / and %
+    & | ^ ~ << >>     : logical operators
     dup               : duplicate top of stack (tos)
     drop              : drop tos
     dropn             : drop tos+1 items from stack
@@ -182,7 +183,7 @@ sub Help {
                         trig functions (radians)
     atan2             : atan(y/x)
     deg               : convert degrees->radians
-    exp               : e^x
+    exp               : e**x
     ln,  loge         : log base e
     log, log10        : log base 10
     lg,  log2         : log base 2
@@ -300,10 +301,6 @@ sub Evaluate {
         };
     }
 
-    elsif ($word eq '^') {
-        warn "error: use ** for exponentiation\n";
-    }
-
     elsif ($word eq '--') {
         Check $word, 1 and push @stack, - pop @stack;
     }
@@ -317,6 +314,41 @@ sub Evaluate {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, int($x / $y), $x % $y;
         }
+    }
+
+    #
+    # For logical operators, add 0 to each operand to ensure they
+    # operate on numbers, not strings.
+    #
+
+    elsif ($word eq '&') {
+	Check $word, 2 and push @stack, (0 + pop @stack) & (0 + pop @stack);
+    }
+
+    elsif ($word eq '|') {
+	Check $word, 2 and push @stack, (0 + pop @stack) | (0 + pop @stack);
+    }
+
+    elsif ($word eq '^') {
+	Check $word, 2 and push @stack, (0 + pop @stack) ^ (0 + pop @stack);
+    }
+
+    elsif ($word eq '~') {
+	Check $word, 1 and push @stack, ~ (0 + pop @stack);
+    }
+
+    elsif ($word eq '<<') {
+	Check $word, 2 and do {
+            my($y, $x) = (pop @stack, pop @stack);
+            push @stack, (0 + $x) << (0 + $y);
+	}
+    }
+
+    elsif ($word eq '>>') {
+	Check $word, 2 and do {
+            my($y, $x) = (pop @stack, pop @stack);
+            push @stack, (0 + $x) >> (0 + $y);
+	}
     }
 
     elsif ($word eq 'sin') {
