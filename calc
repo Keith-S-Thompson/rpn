@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-# $Header: /home/kst/calc/calc,v 1.16 1996-08-07 20:24:05-07 kst Exp $
+# $Header: /home/kst/calc/calc,v 1.17 1996-08-16 04:35:37-07 kst Exp $
 
 #
 # Currently valid @stack runs from 1 to $#stack inclusive;
@@ -286,11 +286,11 @@ sub Evaluate {
     }
 
     elsif ($word eq 'log' or $word eq 'log10') {
-        Check 1 and push @stack, log pop(@stack) / log 10.0;
+        Check 1 and push @stack, log(pop @stack) / log 10.0;
     }
 
-    elsif ($word eq 'lg' || $word eq 'log2') {
-        Check 1 and push @stack, log pop(@stack) / log 2.0;
+    elsif ($word eq 'lg' or $word eq 'log2') {
+        Check 1 and push @stack, log(pop @stack) / log 2.0;
     }
 
     elsif ($word eq 'int') {
