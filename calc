@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl5.6.0 -w
 
-# $Id: calc,v 1.43 2004-11-19 15:48:53-08 kst Exp $
+# $Id: calc,v 1.44 2005-09-26 16:27:21-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -510,7 +510,7 @@ sub Evaluate($) {
         $ofmt = $1;
     }
 
-    elsif ($word =~ /^(.+)=$/) {
+    elsif ($word =~ /^([a-zA-Z_]\w*)=$/) {
         my($var_name) = $1;
         if (defined $reserved{$var_name}) {
             print "= error: reserved name\n";
