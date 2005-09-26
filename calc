@@ -1,6 +1,6 @@
-#!/usr/local/bin/perl5.6.0 -w
+#!/usr/bin/perl -w
 
-# $Id: calc,v 1.44 2005-09-26 16:27:21-07 kst Exp $
+# $Id: calc,v 1.45 2005-09-26 16:32:23-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -31,13 +31,13 @@ sub To_HMS($);
 sub Is_Hex($);
 sub De_Comma($);
 
-my $prog_name = File::Basename::basename $0;
+my $Program_Name = File::Basename::basename $0;
 
-my $Debugging;
-my $Help;
-Getopt::Long::GetOptions 'debug|d' => \$Debugging,
-                         'help|h'  => \$Help       or Usage;
-Usage if $Help;
+my %Opt = ();
+my @Opts = ( \%Opt, qw( debugging!
+                        help! ) );
+Getopt::Long::GetOptions @Opts or Usage;
+Usage if $Opt{Help};
 
 my $inhibit_dump = 0;
 
@@ -46,10 +46,7 @@ my @stack = qw(BOTTOM);
 my @reserved = qw( acos asin atan atan2 clear cos deg depth drop
                    dropn dup exp help hex Hex hms HMS int ln log octal
                    Octal ofmt rand sin sqrt srand srandx swap tan vars );
-my %reserved;
-foreach (@reserved) {
-    $reserved{$_} = 1;
-}
+my %reserved = map { $_ => 1 } @reserved;
 
 my %variables = ( pi => abs atan2(0, -1),
                   e  => exp 1,
@@ -709,7 +706,7 @@ sub Factorial($) {
 # ----------------------------------------------------------------------
 
 sub Debug(@) {
-    print @_ if $Debugging;
+    print @_ if $Opt{Debugging};
 } # Debug
 
 # ----------------------------------------------------------------------
@@ -739,9 +736,9 @@ sub De_Comma($) {
 sub Usage(@) {
     print @_ if @_;
     print <<"EOF";
-Usage: $prog_name [options] [RPN expr]
-    -h --help      : Help
-    -d --debugging : Debugging
+Usage: $Program_Name [options] [RPN expr]
+    -help      : Help
+    -debugging : Debugging
 Commands:
 EOF
     Help;
