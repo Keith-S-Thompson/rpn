@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: calc,v 1.45 2005-09-26 16:32:23-07 kst Exp $
+# $Id: calc,v 1.46 2005-09-27 16:03:18-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -37,7 +37,7 @@ my %Opt = ();
 my @Opts = ( \%Opt, qw( debugging!
                         help! ) );
 Getopt::Long::GetOptions @Opts or Usage;
-Usage if $Opt{Help};
+Usage if $Opt{help};
 
 my $inhibit_dump = 0;
 
@@ -706,7 +706,7 @@ sub Factorial($) {
 # ----------------------------------------------------------------------
 
 sub Debug(@) {
-    print @_ if $Opt{Debugging};
+    print @_ if $Opt{debugging};
 } # Debug
 
 # ----------------------------------------------------------------------
