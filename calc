@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: calc,v 1.46 2005-09-27 16:03:18-07 kst Exp $
+# $Id: calc,v 1.47 2006-07-24 18:26:58-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -43,9 +43,9 @@ my $inhibit_dump = 0;
 
 my @stack = qw(BOTTOM);
 
-my @reserved = qw( acos asin atan atan2 clear cos deg depth drop
-                   dropn dup exp help hex Hex hms HMS int ln log octal
-                   Octal ofmt rand sin sqrt srand srandx swap tan vars );
+my @reserved = qw( acos asin atan atan2 clear cos deg depth drop dropn
+                   dup exp help hex Hex hms HMS int ln log octal Octal
+                   ofmt rand sin sqrt srand srandx sumn swap tan vars );
 my %reserved = map { $_ => 1 } @reserved;
 
 my %variables = ( pi => abs atan2(0, -1),
@@ -183,6 +183,7 @@ sub Help() {
     //                : reciprocal
     %%                : / and %
     & | ^ ~ << >>     : logical operators
+    sumn              : sum of top tos stack elements
     dup               : duplicate top of stack (tos)
     drop              : drop tos
     dropn             : drop tos+1 items from stack
@@ -276,6 +277,25 @@ sub Evaluate($) {
         Check_Numeric $word, 1 and do {
             if ($#stack >= $stack[$#stack] + 1) {
                 $#stack -= $stack[$#stack] + 1;
+            }
+            else {
+                warn "$word error: too few arguments\n";
+            }
+        };
+    }
+
+    elsif ($word eq 'sumn') {
+        Check_Numeric $word, 1 and do {
+            if ($#stack >= $stack[$#stack] + 1) {
+                my $count = pop @stack;
+                my $top_index = $#stack;
+                my $bottom_index = $top_index - $count + 1;
+                my $result = 0;
+                for (my $i = $bottom_index; $i <= $top_index; $i ++) {
+                    $result += $stack[$i];
+                }
+                $#stack -= $count;
+                push @stack, $result;
             }
             else {
                 warn "$word error: too few arguments\n";
