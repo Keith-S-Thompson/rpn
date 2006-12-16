@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: calc,v 1.47 2006-07-24 18:26:58-07 kst Exp $
+# $Id: calc,v 1.48 2006-12-15 18:10:42-08 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -11,6 +11,8 @@
 use strict;
 use Getopt::Long ();
 use File::Basename ();
+
+use Math::BigFloat;
 
 sub Usage(@);
 sub Debug(@);
@@ -88,7 +90,11 @@ sub Dump($) {
     if ($#stack) {
         for ($i = 1; $i <= $#stack; $i ++) {
             # printf("%3d: %s\n", $i, $stack[$i]);
-            if (ref $stack[$i] eq 'SCALAR') {
+            if (ref $stack[$i] eq 'Math::BigFloat') {
+                printf "%3d: ", $i;
+                print "B: $stack[$i]\n";
+            }
+            elsif (ref $stack[$i] eq 'SCALAR') {
                 printf "%3d: \"%s\"\n", $i, ${$stack[$i]};
             }
             elsif ($base eq 'HMS') {
@@ -116,6 +122,7 @@ sub Show_Vars() {
 
 sub Is_Numeric($) {
     my $arg = $_[0];
+    return 1 if ref $arg eq 'Math::BigFloat';
     return 0 if ref $arg;
     my $warning = undef;
     {
@@ -178,6 +185,9 @@ sub Is_Hex($) {
 
 sub Help() {
     print <<'EOF';
+    <number>          : Push a number on the stack
+    <num>:<num>...    : Push a number in HH:MM::SS format
+    B:<number>        : Push a bignum on the stack (preliminary support)
     +, -, *, /, %, ** : arithmetic operators
     --                : negate
     //                : reciprocal
@@ -604,6 +614,12 @@ sub Evaluate($) {
 
     elsif ($word eq '\\') {
         $inhibit_dump = 1;
+    }
+
+    elsif (De_Comma $word =~ /^[Bb]:\s*(.*)$/ and
+           Is_Numeric $1)
+    {
+        push @stack, Math::BigFloat->new($1);
     }
 
     elsif (Is_Numeric ($tmp = De_Comma $word)) {
