@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: calc,v 1.48 2006-12-15 18:10:42-08 kst Exp $
+# $Id: calc,v 1.49 2007-01-05 20:01:09-08 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -731,9 +731,9 @@ sub Factorial($) {
         return $x;
     }
     else {
-        my($result) = 1;
-        for (my $i = 2; $i <= $x; $i ++) {
-            $result *= $i;
+        my $result = 1;
+        if (ref $x eq 'Math::BigFloat') {
+            $result = Math::BigFloat->new($result);
         }
         return $result;
     }
