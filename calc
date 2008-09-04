@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: calc,v 1.50 2007-01-05 20:04:51-08 kst Exp $
+# $Id: calc,v 1.51 2008-09-03 18:36:27-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -637,6 +637,10 @@ sub Evaluate($) {
     else {
         # warn "error: unrecognized word $word\n";
         push @stack, \$word;
+    }
+
+    if (ref $stack[$#stack] eq 'Math::BigInt') {
+        $stack[$#stack] = new Math::BigFloat $stack[$#stack];
     }
 } # Evaluate
 
