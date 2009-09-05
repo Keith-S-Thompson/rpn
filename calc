@@ -1,6 +1,6 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
-# $Id: calc,v 1.52 2008-12-25 09:12:14-08 kst Exp $
+# $Id: calc,v 1.53 2009-09-05 13:37:14-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -9,8 +9,10 @@
 #
 
 use strict;
+use warnings;
+
 use Getopt::Long ();
-use File::Basename ();
+use File::Spec ();
 
 use Math::BigFloat;
 
@@ -33,7 +35,7 @@ sub To_HMS($);
 sub Is_Hex($);
 sub De_Comma($);
 
-my $Program_Name = File::Basename::basename $0;
+my $Program_Name = (File::Spec->splitpath($0))[2];
 
 my %Opt = ();
 my @Opts = ( \%Opt, qw( debugging!
