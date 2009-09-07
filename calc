@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.53 2009-09-05 13:37:14-07 kst Exp $
+# $Id: calc,v 1.54 2009-09-07 11:08:24-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -14,7 +14,8 @@ use warnings;
 use Getopt::Long ();
 use File::Spec ();
 
-use Math::BigFloat;
+eval 'use Math::BigFloat';
+my($Have_BigFloat) = ( $@ eq '' );
 
 sub Usage(@);
 sub Debug(@);
@@ -618,10 +619,11 @@ sub Evaluate($) {
         $inhibit_dump = 1;
     }
 
-    elsif (De_Comma $word =~ /^[Bb]:\s*(.*)$/ and
+    elsif ($Have_BigFloat and
+           De_Comma $word =~ /^[Bb]:\s*(.*)$/ and
            Is_Numeric($tmp = De_Comma $1))
     {
-        push @stack, Math::BigFloat->new($tmp);
+        push @stack, eval 'Math::BigFloat->new($tmp)';
     }
 
     elsif (Is_Numeric($tmp = De_Comma $word)) {
@@ -642,7 +644,7 @@ sub Evaluate($) {
     }
 
     if (ref $stack[$#stack] eq 'Math::BigInt') {
-        $stack[$#stack] = new Math::BigFloat $stack[$#stack];
+        $stack[$#stack] = eval 'new Math::BigFloat $stack[$#stack]';
     }
 } # Evaluate
 
@@ -739,7 +741,7 @@ sub Factorial($) {
     else {
         my $result = 1;
         if (ref $x eq 'Math::BigFloat') {
-            $result = Math::BigFloat->new($result);
+            $result = eval 'Math::BigFloat->new($result)';
         }
         for (my $i = 2; $i <= $x; $i ++) {
             $result *= $i;
