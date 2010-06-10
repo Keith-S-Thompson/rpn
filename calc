@@ -1,11 +1,33 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.55 2009-10-21 19:11:07-07 kst Exp $
+# $Id: calc,v 1.56 2010-06-10 13:29:37-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
 # Currently valid @stack runs from 1 to $#stack inclusive.
 # Index 0 is not used (and is set to 'BOTTOM').
+#
+
+# TODO:
+# Make @stack a stack of stacks, each element of which is an array
+# reference.  The new "(" operator pushes a new stack on the stack
+# of stacks; ")" slurps the current stack into an array, pops it,
+# and pushes a reference to it onto the new stack.  TODO: Think of
+# a better way to describe this.
+#
+# If a stack element is an array reference, display its elements
+# surrounded by parentheses.
+#
+# For example, this:
+#     ( 10 20 30 )
+# creates a new stack, pushes the values 10 20 30 onto it, then
+# pushes [ 10, 20, 30 ] onto the previous stack and pops the
+# new stack.
+#
+# I can then define array operations, such as replacing a list
+# with the differences between its successive members:
+#     ( 10 12 17 20 ) --> ( 2 5 3 )
+# Hmm.  Look at Perl6 operators and consider stealing some of them.
 #
 
 use strict;
