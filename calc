@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.56 2010-06-10 13:29:37-07 kst Exp $
+# $Id: calc,v 1.57 2011-04-18 18:30:04-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -73,7 +73,7 @@ my @stack = qw(BOTTOM);
 
 my @reserved = qw( acos asin atan atan2 clear cos deg depth drop dropn
                    dup exp help hex Hex hms HMS int ln log octal Octal
-                   ofmt rand sin sqrt srand srandx sumn swap tan vars
+                   ofmt rad rand sin sqrt srand srandx sumn swap tan vars
                    x y z t );
 my %reserved = map { $_ => 1 } @reserved;
 
@@ -231,6 +231,7 @@ sub Help() {
                         trig functions (radians)
     atan2             : atan(y/x)
     deg               : convert degrees->radians
+    rad               : convert radians->degrees
     exp               : e**x
     ln,  loge         : log base e
     log, log10        : log base 10
@@ -536,6 +537,12 @@ sub Evaluate($) {
     elsif ($word eq 'deg') {
         Check_Numeric $word, 1 and
             push @stack, pop(@stack) * $degrees_to_radians;
+        Set_XYZT;
+    }
+
+    elsif ($word eq 'rad') {
+        Check_Numeric $word, 1 and
+            push @stack, pop(@stack) / $degrees_to_radians;
         Set_XYZT;
     }
 
