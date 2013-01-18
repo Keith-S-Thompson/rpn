@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.59 2012-01-07 03:03:36-08 kst Exp $
+# $Id: calc,v 1.60 2013-01-18 08:32:51-08 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -28,6 +28,8 @@
 # with the differences between its successive members:
 #     ( 10 12 17 20 ) --> ( 2 5 3 )
 # Hmm.  Look at Perl6 operators and consider stealing some of them.
+#
+# BUG: T (tera, 2**40) conflicts with T (4th stack element)
 #
 
 use strict;
