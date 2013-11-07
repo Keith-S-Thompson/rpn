@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.60 2013-01-18 08:32:51-08 kst Exp $
+# $Id: calc,v 1.61 2013-11-07 13:47:47-08 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -41,10 +41,15 @@ use File::Spec ();
 eval 'use Math::BigFloat';
 my($Have_BigFloat) = ( $@ eq '' );
 
+eval 'use Term::ReadLine';
+my($Have_Term_ReadLine) = ( $@ eq '' );
+my($term);
+
 my $Program_Name = (File::Spec->splitpath($0))[2];
 
 my %Opt = ();
 my @Opts = ( \%Opt, qw( debugging!
+                        readline!
                         help! ) );
 Getopt::Long::GetOptions @Opts or Usage();
 Usage() if $Opt{help};
@@ -74,9 +79,17 @@ if (@ARGV) {
     Evaluate_Line(join ' ', @ARGV);
 }
 else {
-    while (<>) {
-        chomp;
-        Evaluate_Line($_);
+    if ($Opt{readline}) {
+        Init_ReadLine();
+        while ( defined ($_ = eval q($term->readline('>'))) ) {
+            Evaluate_Line($_);
+        }
+    }
+    else {
+        while (<>) {
+            chomp;
+            Evaluate_Line($_);
+        }
     }
 }
 
@@ -847,11 +860,26 @@ sub Set_XYZT {
 
 # ----------------------------------------------------------------------
 
+sub Init_ReadLine {
+    our $initialized;
+    if (not $initialized) {
+        if ($Have_Term_ReadLine) {
+            eval q($term = new Term::ReadLine 'calc');
+        }
+        else {
+            die "Unable to load Perl::ReadLine\n";
+        }
+    }
+}
+
+# ----------------------------------------------------------------------
+
 sub Usage {
     print @_ if @_;
     print <<"EOF";
 Usage: $Program_Name [options] [RPN expr]
     -help      : Help
+    -readline  : Use Perl::ReadLine for input
     -debugging : Debugging
 Commands:
 EOF
