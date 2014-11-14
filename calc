@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.61 2013-11-07 13:47:47-08 kst Exp $
+# $Id: calc,v 1.62 2014-11-14 10:29:53-08 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -47,7 +47,7 @@ my($term);
 
 my $Program_Name = (File::Spec->splitpath($0))[2];
 
-my %Opt = ();
+my %Opt = (readline => 1);
 my @Opts = ( \%Opt, qw( debugging!
                         readline!
                         help! ) );
@@ -79,9 +79,8 @@ if (@ARGV) {
     Evaluate_Line(join ' ', @ARGV);
 }
 else {
-    if ($Opt{readline}) {
-        Init_ReadLine();
-        while ( defined ($_ = eval q($term->readline('>'))) ) {
+    if ($Opt{readline} and Init_ReadLine()) {
+        while ( defined ($_ = eval q($term->readline(''))) ) {
             Evaluate_Line($_);
         }
     }
@@ -865,9 +864,11 @@ sub Init_ReadLine {
     if (not $initialized) {
         if ($Have_Term_ReadLine) {
             eval q($term = new Term::ReadLine 'calc');
+            return 1;
         }
         else {
-            die "Unable to load Perl::ReadLine\n";
+            warn "Unable to load Perl::ReadLine\n";
+            return 0;
         }
     }
 }
@@ -879,7 +880,7 @@ sub Usage {
     print <<"EOF";
 Usage: $Program_Name [options] [RPN expr]
     -help      : Help
-    -readline  : Use Perl::ReadLine for input
+    -readline  : Use Perl::ReadLine for input (default)
     -debugging : Debugging
 Commands:
 EOF
