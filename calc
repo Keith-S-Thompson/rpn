@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.62 2014-11-14 10:29:53-08 kst Exp $
+# $Id: calc,v 1.63 2015-08-02 13:35:45-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -200,7 +200,7 @@ sub To_HMS {
 sub Is_Hex {
     my($word) = @_;
 
-    return $word =~ /^0x[\da-f]/i;
+    return $word =~ /^0x[\da-f]+$/i;
 } # Is_Hex
 
 # ----------------------------------------------------------------------
