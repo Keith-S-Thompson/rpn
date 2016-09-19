@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.63 2015-08-02 13:35:45-07 kst Exp $
+# $Id: calc,v 1.64 2016-09-19 14:30:18-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -13,7 +13,8 @@
 # reference.  The new "(" operator pushes a new stack on the stack
 # of stacks; ")" slurps the current stack into an array, pops it,
 # and pushes a reference to it onto the new stack.  TODO: Think of
-# a better way to describe this.
+# a better way to describe this.  Probably better to think of it as
+# a stack of lists.
 #
 # If a stack element is an array reference, display its elements
 # surrounded by parentheses.
@@ -37,6 +38,9 @@ use warnings;
 
 use Getopt::Long ();
 use File::Spec ();
+
+eval 'use Math::BigInt';
+my($Have_BigInt) = ( $@ eq '' );
 
 eval 'use Math::BigFloat';
 my($Have_BigFloat) = ( $@ eq '' );
@@ -112,7 +116,12 @@ sub Dump {
     if ($#stack) {
         for ($i = 1; $i <= $#stack; $i ++) {
             # printf("%3d: %s\n", $i, $stack[$i]);
-            if (ref $stack[$i] eq 'Math::BigFloat') {
+            # print "ref[$i] = \"", ref $stack[$i], "\"\n";
+            if (ref $stack[$i] eq 'Math::BigInt') {
+                printf "%3d: ", $i;
+                print "I: $stack[$i]\n";
+            }
+            elsif (ref $stack[$i] eq 'Math::BigFloat') {
                 printf "%3d: ", $i;
                 print "B: $stack[$i]\n";
             }
@@ -175,16 +184,29 @@ sub Is_HMS {
 
 # ----------------------------------------------------------------------
 
+# sub From_HMS {
+#     my($word) = @_;
+#     my @fields;
+#     my $result = 0.0;
+# 
+#     @fields = split /:/, $word;
+# 
+#     for (my $i = $#fields; $i >= 0; $i --) {
+#         $result += $fields[$i];
+#         $result /= 60.0 if $i > 0;
+#     }
+#     return $result;
+# } # From_HMS
+
 sub From_HMS {
     my($word) = @_;
     my @fields;
-    my $result = 0.0;
+    my $result = 0;
 
     @fields = split /:/, $word;
 
-    for (my $i = $#fields; $i >= 0; $i --) {
-        $result += $fields[$i];
-        $result /= 60.0 if $i > 0;
+    foreach my $field (@fields) {
+        $result = $result * 60 + $field;
     }
     return $result;
 } # From_HMS
@@ -209,7 +231,8 @@ sub Help {
     print <<'EOF';
     <number>          : Push a number on the stack
     <num>:<num>...    : Push a number in HH:MM::SS format
-    B:<number>        : Push a bignum on the stack (preliminary support)
+    I:<number>        : Push a BigInt on the stack
+    B:<number>        : Push a BigFloat on the stack
     +, -, *, /, %, ** : arithmetic operators
     --                : negate
     //                : reciprocal
@@ -248,6 +271,8 @@ sub Help {
     Octal             : dump stack in octal
     HMS               : dump stack in H:M:S format
     \                 : inhibit stack dump
+    : ...             : Evaluate Perl expression (one line only)
+    (...)             : Evaluate Perl expression (no whitespace)
 EOF
 #   print "    ...          : continue (used on command line)"
 } # Help
@@ -617,6 +642,12 @@ sub Evaluate {
         }
     }
 
+    elsif ($word =~ /^\((.*)\)$/) {
+        my $result = eval $1;
+        push @stack, $result;
+        Set_XYZT();
+    }
+
     elsif (defined $variables{$word}) {
         push @stack, $variables{$word};
         Set_XYZT();
@@ -683,6 +714,15 @@ sub Evaluate {
 
     elsif ($word eq '\\') {
         $inhibit_dump = 1;
+    }
+
+    elsif ($Have_BigInt and
+           De_Comma($word) =~ /^[Ii]:\s*(.*)$/ and
+           Is_Numeric($tmp = De_Comma($1)))
+    {
+        push @stack, eval 'Math::BigInt->new($tmp)';
+        print ">>> pushed BigInt $stack[-1]\n";
+        Set_XYZT();
     }
 
     elsif ($Have_BigFloat and
