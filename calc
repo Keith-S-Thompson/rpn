@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.65 2018-02-20 14:13:54-08 kst Exp $
+# $Id: calc,v 1.66 2018-02-20 14:16:56-08 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -220,6 +220,12 @@ sub To_HMS() {
 sub Is_Hex($word) {
     return $word =~ /^0x[\da-f]+$/i;
 } # Is_Hex
+
+# ----------------------------------------------------------------------
+
+sub Is_Binary($word) {
+    return $word =~ /^0[bB][01]+$/;
+} # Is_Binary
 
 # ----------------------------------------------------------------------
 
@@ -736,6 +742,11 @@ sub Evaluate($word) {
 
     elsif (Is_Hex($word)) {
         push @stack, hex $word;
+        Set_XYZT();
+    }
+
+    elsif (Is_Binary($word)) {
+        push @stack, eval $word;
         Set_XYZT();
     }
 
