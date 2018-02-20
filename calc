@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.64 2016-09-19 14:30:18-07 kst Exp $
+# $Id: calc,v 1.65 2018-02-20 14:13:54-08 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -35,6 +35,9 @@
 
 use strict;
 use warnings;
+
+use feature 'signatures';
+no warnings 'experimental::signatures';
 
 use Getopt::Long ();
 use File::Spec ();
@@ -98,8 +101,7 @@ else {
 
 ########################################################################
 
-sub Dump {
-    my($base) = @_;
+sub Dump($base) {
 
     my $i;
     my $format;
@@ -143,7 +145,7 @@ sub Dump {
 
 # ----------------------------------------------------------------------
 
-sub Show_Vars {
+sub Show_Vars() {
     foreach my $name (sort keys %variables) {
         printf "%-8s = $ofmt\n", $name, $variables{$name};
     }
@@ -151,8 +153,7 @@ sub Show_Vars {
 
 # ----------------------------------------------------------------------
 
-sub Is_Numeric {
-    my $arg = $_[0];
+sub Is_Numeric($arg) {
     return 1 if ref $arg eq 'Math::BigFloat';
     return 0 if ref $arg;
     my $warning = undef;
@@ -176,9 +177,7 @@ sub Is_Numeric {
 
 # ----------------------------------------------------------------------
 
-sub Is_HMS {
-    my($word) = @_;
-
+sub Is_HMS($word) {
     return $word =~ /^(\d+:)+\d+$/;
 } # Is_HMS
 
@@ -198,8 +197,7 @@ sub Is_HMS {
 #     return $result;
 # } # From_HMS
 
-sub From_HMS {
-    my($word) = @_;
+sub From_HMS($word) {
     my @fields;
     my $result = 0;
 
@@ -213,21 +211,19 @@ sub From_HMS {
 
 # ----------------------------------------------------------------------
 
-sub To_HMS {
+sub To_HMS() {
     return "To_HMS not yet implemented";
 } # To_HMS
 
 # ----------------------------------------------------------------------
 
-sub Is_Hex {
-    my($word) = @_;
-
+sub Is_Hex($word) {
     return $word =~ /^0x[\da-f]+$/i;
 } # Is_Hex
 
 # ----------------------------------------------------------------------
 
-sub Help {
+sub Help() {
     print <<'EOF';
     <number>          : Push a number on the stack
     <num>:<num>...    : Push a number in HH:MM::SS format
@@ -279,9 +275,7 @@ EOF
 
 # ----------------------------------------------------------------------
 
-sub Check {
-    my($word, $count) = @_;
-
+sub Check($word, $count) {
     if ($#stack >= $count) {
         return 1;
     }
@@ -293,9 +287,7 @@ sub Check {
 
 # ----------------------------------------------------------------------
 
-sub Check_Numeric {
-    my($word, $count) = @_;
-
+sub Check_Numeric($word, $count) {
     if ($#stack >= $count) {
         for (my $i = $#stack; $i >= $#stack - $count + 1; $i --) {
             if (not Is_Numeric($stack[$i])) {
@@ -317,8 +309,7 @@ sub Check_Numeric {
 
 # ----------------------------------------------------------------------
 
-sub Evaluate {
-    my($word) = @_;
+sub Evaluate($word) {
     my $tmp;
 
     Debug("DEBUG: evaluate \"$word\"\n");
@@ -760,8 +751,7 @@ sub Evaluate {
 
 # ----------------------------------------------------------------------
 
-sub Evaluate_String {
-    my($eval_string) = @_;
+sub Evaluate_String($eval_string) {
     my $result;
     my $warning = undef;
 
@@ -806,8 +796,7 @@ sub Evaluate_String {
 
 # ----------------------------------------------------------------------
 
-sub Evaluate_Line {
-    my($line) = @_;
+sub Evaluate_Line($line) {
     my $last_arg;
     my $is_eval;
 
@@ -837,9 +826,7 @@ sub Evaluate_Line {
 
 # ----------------------------------------------------------------------
 
-sub Factorial {
-    my($x) = @_;
-
+sub Factorial($x) {
     if ($x != int $x) {
         warn "Factorial requires an integer argument\n";
         return $x;
@@ -862,15 +849,13 @@ sub Factorial {
 
 # ----------------------------------------------------------------------
 
-sub Debug {
-    print @_ if $Opt{debugging};
+sub Debug(@args) {
+    print @args if $Opt{debugging};
 } # Debug
 
 # ----------------------------------------------------------------------
 
-sub Image {
-    my($result) = @_;
-
+sub Image($result) {
     if (defined $result) {
         $result =~ s/\n/\\n/g;
         return "\"$result\"";
@@ -882,15 +867,14 @@ sub Image {
 
 # ----------------------------------------------------------------------
 
-sub De_Comma {
-    my($s) = @_;
+sub De_Comma($s) {
     $s =~ s/,//g;
     return $s;
 } # De_Comma
 
 # ----------------------------------------------------------------------
 
-sub Set_XYZT {
+sub Set_XYZT() {
     $variables{X} = $stack[-1] if $#stack >= 1;
     $variables{Y} = $stack[-2] if $#stack >= 2;
     $variables{Z} = $stack[-3] if $#stack >= 3;
@@ -899,7 +883,7 @@ sub Set_XYZT {
 
 # ----------------------------------------------------------------------
 
-sub Init_ReadLine {
+sub Init_ReadLine() {
     our $initialized;
     if (not $initialized) {
         if ($Have_Term_ReadLine) {
@@ -915,8 +899,8 @@ sub Init_ReadLine {
 
 # ----------------------------------------------------------------------
 
-sub Usage {
-    print @_ if @_;
+sub Usage(@args) {
+    print @args if @args;
     print <<"EOF";
 Usage: $Program_Name [options] [RPN expr]
     -help      : Help
