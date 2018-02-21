@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.66 2018-02-20 14:16:56-08 kst Exp $
+# $Id: calc,v 1.67 2018-02-21 14:00:32-08 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -183,20 +183,6 @@ sub Is_HMS($word) {
 
 # ----------------------------------------------------------------------
 
-# sub From_HMS {
-#     my($word) = @_;
-#     my @fields;
-#     my $result = 0.0;
-# 
-#     @fields = split /:/, $word;
-# 
-#     for (my $i = $#fields; $i >= 0; $i --) {
-#         $result += $fields[$i];
-#         $result /= 60.0 if $i > 0;
-#     }
-#     return $result;
-# } # From_HMS
-
 sub From_HMS($word) {
     my @fields;
     my $result = 0;
@@ -211,7 +197,7 @@ sub From_HMS($word) {
 
 # ----------------------------------------------------------------------
 
-sub To_HMS() {
+sub To_HMS($word) {
     return "To_HMS not yet implemented";
 } # To_HMS
 
