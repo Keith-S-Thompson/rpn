@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.67 2018-02-21 14:00:32-08 kst Exp $
+# $Id: calc,v 1.68 2018-02-21 14:14:33-08 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -31,6 +31,8 @@
 # Hmm.  Look at Perl6 operators and consider stealing some of them.
 #
 # BUG: T (tera, 2**40) conflicts with T (4th stack element)
+#
+# Implement To_HMS for fractional values.
 #
 
 use strict;
@@ -198,7 +200,23 @@ sub From_HMS($word) {
 # ----------------------------------------------------------------------
 
 sub To_HMS($word) {
-    return "To_HMS not yet implemented";
+    if (int($word) != $word) {
+        return "To_HMS not yet implemented for fractional values";
+    }
+    my $sign = '';
+    if ($word == 0) {
+        return "00";
+    }
+    if ($word < 0) {
+        $sign = '-';
+        $word = -$word;
+    }
+    my @digits = ();
+    while ($word != 0) {
+        unshift @digits, sprintf("%02d", $word % 60);
+        $word = int($word / 60);
+    }
+    return $sign . join(':', @digits);
 } # To_HMS
 
 # ----------------------------------------------------------------------
@@ -722,7 +740,7 @@ sub Evaluate($word) {
     }
 
     elsif (Is_HMS($word)) {
-        push @stack, From_HMS $word;
+        push @stack, From_HMS($word);
         Set_XYZT();
     }
 
