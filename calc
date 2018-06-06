@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.68 2018-02-21 14:14:33-08 kst Exp $
+# $Id: calc,v 1.69 2018-06-06 14:03:00-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -29,8 +29,6 @@
 # with the differences between its successive members:
 #     ( 10 12 17 20 ) --> ( 2 5 3 )
 # Hmm.  Look at Perl6 operators and consider stealing some of them.
-#
-# BUG: T (tera, 2**40) conflicts with T (4th stack element)
 #
 # Implement To_HMS for fractional values.
 #
@@ -70,17 +68,35 @@ my @stack = qw(BOTTOM);
 my @reserved = qw( acos asin atan atan2 clear cos deg depth drop dropn
                    dup exp help hex Hex hms HMS int ln log octal Octal
                    ofmt rad rand sin sqrt srand srandx sumn swap tan vars
-                   X Y Z T );
+                   x y z t );
 my %reserved = map { $_ => 1 } @reserved;
 
 # my ($x, $y, $z, $t);
-my %variables = ( pi => abs atan2(0, -1),
-                  e  => exp 1,
-                  k  => 2**10,
-                  M  => 2**20,
-                  G  => 2**30,
-                  T  => 2**40,
-                  P  => 2**50 );
+my %variables = (
+    pi => abs atan2(0, -1),
+    e  => exp 1,
+    phi => (sqrt(5) + 1) / 2,
+    k  => 2**10,
+    M  => 2**20,
+    G  => 2**30,
+    T  => 2**40,
+    P  => 2**50,
+    E  => 2**60,
+    Z  => 2**70,
+    Y  => 2**80,
+    hundred => 1e2,
+    thousand => 1e3,
+    million => 1e6,
+    billion => 1e9,
+    trillion => 1e12,
+    quadrillion => 1e15,
+    quintillion => 1e18,
+    sextillion => 1e21,
+    septillion => 1e24,
+    octillion => 1e27,
+    nonillion => 1e30,
+    decillion => 1e33
+);
 my $degrees_to_radians = $variables{pi} / 180.0;
 my $ofmt = '%.16g';
 
@@ -149,7 +165,7 @@ sub Dump($base) {
 
 sub Show_Vars() {
     foreach my $name (sort keys %variables) {
-        printf "%-8s = $ofmt\n", $name, $variables{$name};
+        printf "%-12s = $ofmt\n", $name, $variables{$name};
     }
 } # Show_Vars
 
@@ -326,19 +342,19 @@ sub Evaluate($word) {
 
     if ($word eq 'dup') {
         Check($word, 1) and push @stack, $stack[$#stack];
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'drop') {
         Check($word, 1) and pop @stack;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'dropn') {
         Check_Numeric($word, 1) and do {
             if ($#stack >= $stack[$#stack] + 1) {
                 $#stack -= $stack[$#stack] + 1;
-                Set_XYZT();
+                Set_xyzt();
             }
             else {
                 warn "$word error: too few arguments\n";
@@ -358,7 +374,7 @@ sub Evaluate($word) {
                 }
                 $#stack -= $count;
                 push @stack, $result;
-                Set_XYZT();
+                Set_xyzt();
             }
             else {
                 warn "$word error: too few arguments\n";
@@ -368,12 +384,12 @@ sub Evaluate($word) {
 
     elsif ($word eq 'clear') {
         $#stack = 0;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'depth') {
         push @stack, $#stack;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'swap') {
@@ -381,7 +397,7 @@ sub Evaluate($word) {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, $y;
             push @stack, $x;
-            Set_XYZT();
+            Set_xyzt();
         };
     }
 
@@ -389,7 +405,7 @@ sub Evaluate($word) {
         Check_Numeric($word, 2) and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, $x + $y;
-            Set_XYZT();
+            Set_xyzt();
         };
     }
 
@@ -397,7 +413,7 @@ sub Evaluate($word) {
         Check_Numeric($word, 2) and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, $x - $y;
-            Set_XYZT();
+            Set_xyzt();
         };
     }
 
@@ -405,7 +421,7 @@ sub Evaluate($word) {
         Check_Numeric($word, 2) and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, $x * $y;
-            Set_XYZT();
+            Set_xyzt();
         };
     }
 
@@ -413,7 +429,7 @@ sub Evaluate($word) {
         Check_Numeric($word, 2) and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, $x / $y;
-            Set_XYZT();
+            Set_xyzt();
         };
     }
 
@@ -421,7 +437,7 @@ sub Evaluate($word) {
         Check_Numeric($word, 2) and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, $x % $y;
-            Set_XYZT();
+            Set_xyzt();
         };
     }
 
@@ -429,7 +445,7 @@ sub Evaluate($word) {
         Check_Numeric($word, 2) and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, $x ** $y;
-            Set_XYZT();
+            Set_xyzt();
         };
     }
 
@@ -437,7 +453,7 @@ sub Evaluate($word) {
         Check_Numeric($word, 1) and do {
             my($x) = pop @stack;
             push @stack, - $x;
-            Set_XYZT();
+            Set_xyzt();
         }
     }
 
@@ -445,7 +461,7 @@ sub Evaluate($word) {
         Check_Numeric($word, 1) and do {
             my($x) = pop @stack;
             push @stack, 1.0 / $x;
-            Set_XYZT();
+            Set_xyzt();
         }
     }
 
@@ -453,7 +469,7 @@ sub Evaluate($word) {
         Check_Numeric($word, 2) and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, int($x / $y), $x % $y;
-            Set_XYZT();
+            Set_xyzt();
         }
     }
 
@@ -466,7 +482,7 @@ sub Evaluate($word) {
         Check_Numeric($word, 2) and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, (0 + $x) & (0 + $y);
-            Set_XYZT();
+            Set_xyzt();
         }
     }
 
@@ -474,7 +490,7 @@ sub Evaluate($word) {
         Check_Numeric($word, 2) and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, (0 + $x) | (0 + $y);
-            Set_XYZT();
+            Set_xyzt();
         }
     }
 
@@ -482,20 +498,20 @@ sub Evaluate($word) {
         Check_Numeric($word, 2) and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, (0 + $x) ^ (0 + $y);
-            Set_XYZT();
+            Set_xyzt();
         }
     }
 
     elsif ($word eq '~') {
         Check_Numeric($word, 1) and push @stack, ~ (0 + pop @stack);
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq '<<') {
         Check_Numeric($word, 2) and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, (0 + $x) << (0 + $y);
-            Set_XYZT();
+            Set_xyzt();
         }
     }
 
@@ -503,25 +519,25 @@ sub Evaluate($word) {
         Check_Numeric($word, 2) and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, (0 + $x) >> (0 + $y);
-            Set_XYZT();
+            Set_xyzt();
         }
     }
 
     elsif ($word eq 'sin') {
         Check_Numeric($word, 1) and push @stack, sin pop @stack;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'cos') {
         Check_Numeric($word, 1) and push @stack, cos pop @stack;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'tan') {
         Check_Numeric($word, 1) and do {
             my($x) = pop @stack;
             push @stack, sin($x) / cos($x);
-            Set_XYZT();
+            Set_xyzt();
         };
     }
 
@@ -529,7 +545,7 @@ sub Evaluate($word) {
         Check_Numeric($word, 1) and do {
             my($x) = pop @stack;
             push @stack, atan2($x, sqrt(1 - $x**2));
-            Set_XYZT();
+            Set_xyzt();
         };
     }
 
@@ -537,88 +553,88 @@ sub Evaluate($word) {
         Check_Numeric($word, 1) and do {
             my($x) = pop @stack;
             push @stack, atan2(sqrt(1 - $x**2), $x);
-            Set_XYZT();
+            Set_xyzt();
         };
     }
 
     elsif ($word eq 'atan') {
         Check_Numeric($word, 1) and push @stack, atan2(pop @stack, 1.0);
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'atan2') {
         Check_Numeric($word, 2) and do {
             my($y, $x) = (pop @stack, pop @stack);
             push @stack, atan2($x, $y);
-            Set_XYZT();
+            Set_xyzt();
         };
     }
 
     elsif ($word eq 'deg') {
         Check_Numeric($word, 1) and
             push @stack, pop(@stack) * $degrees_to_radians;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'rad') {
         Check_Numeric($word, 1) and
             push @stack, pop(@stack) / $degrees_to_radians;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'exp') {
         Check_Numeric($word, 1) and push @stack, exp pop @stack;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'ln' or $word eq 'loge') {
         Check_Numeric($word, 1) and push @stack, log pop @stack;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'log' or $word eq 'log10') {
         Check_Numeric($word, 1) and push @stack, log(pop @stack) / log 10.0;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'lg' or $word eq 'log2') {
         Check_Numeric($word, 1) and push @stack, log(pop @stack) / log 2.0;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'int') {
         Check_Numeric($word, 1) and push @stack, int pop @stack;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'srandx') {
         Check_Numeric($word, 1) and srand pop @stack;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'srand') {
         srand(time^$$);
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'rand') {
         push @stack, rand;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'randx') {
         Check_Numeric($word, 1) and push @stack, rand pop @stack;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'sqrt') {
         Check_Numeric($word, 1) and push @stack, sqrt pop @stack;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq '!') {
         Check_Numeric($word, 1) and push @stack, Factorial(pop @stack);
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq 'vars') {
@@ -639,19 +655,19 @@ sub Evaluate($word) {
             print "= error: reserved name\n";
         } else {
             Check($word, 1) and $variables{$var_name} = pop @stack;
-            Set_XYZT();
+            Set_xyzt();
         }
     }
 
     elsif ($word =~ /^\((.*)\)$/) {
         my $result = eval $1;
         push @stack, $result;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif (defined $variables{$word}) {
         push @stack, $variables{$word};
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($word eq '?' or $word eq 'help') {
@@ -663,7 +679,7 @@ sub Evaluate($word) {
         Check($word, 1) and do {
             printf "$ofmt\n", pop @stack;
             $inhibit_dump = 1;
-            Set_XYZT();
+            Set_xyzt();
         };
     }
 
@@ -723,7 +739,7 @@ sub Evaluate($word) {
     {
         push @stack, eval 'Math::BigInt->new($tmp)';
         print ">>> pushed BigInt $stack[-1]\n";
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif ($Have_BigFloat and
@@ -731,27 +747,27 @@ sub Evaluate($word) {
            Is_Numeric($tmp = De_Comma($1)))
     {
         push @stack, eval 'Math::BigFloat->new($tmp)';
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif (Is_Numeric($tmp = De_Comma($word))) {
         push @stack, $tmp;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif (Is_HMS($word)) {
         push @stack, From_HMS($word);
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif (Is_Hex($word)) {
         push @stack, hex $word;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     elsif (Is_Binary($word)) {
         push @stack, eval $word;
-        Set_XYZT();
+        Set_xyzt();
     }
 
     else {
@@ -889,12 +905,12 @@ sub De_Comma($s) {
 
 # ----------------------------------------------------------------------
 
-sub Set_XYZT() {
-    $variables{X} = $stack[-1] if $#stack >= 1;
-    $variables{Y} = $stack[-2] if $#stack >= 2;
-    $variables{Z} = $stack[-3] if $#stack >= 3;
-    $variables{T} = $stack[-4] if $#stack >= 4;
-} # Set_XYZT
+sub Set_xyzt() {
+    $variables{x} = $stack[-1] if $#stack >= 1;
+    $variables{y} = $stack[-2] if $#stack >= 2;
+    $variables{z} = $stack[-3] if $#stack >= 3;
+    $variables{t} = $stack[-4] if $#stack >= 4;
+} # Set_xyzt
 
 # ----------------------------------------------------------------------
 
