@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.69 2018-06-06 14:03:00-07 kst Exp $
+# $Id: calc,v 1.70 2018-09-21 13:50:51-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -30,7 +30,7 @@
 #     ( 10 12 17 20 ) --> ( 2 5 3 )
 # Hmm.  Look at Perl6 operators and consider stealing some of them.
 #
-# Implement To_HMS for fractional values.
+# Implement to_hms for fractional values.
 #
 
 use strict;
@@ -52,14 +52,15 @@ eval 'use Term::ReadLine';
 my($Have_Term_ReadLine) = ( $@ eq '' );
 my($term);
 
-my $Program_Name = (File::Spec->splitpath($0))[2];
+my $program_name = (File::Spec->splitpath($0))[2];
 
-my %Opt = (readline => 1);
-my @Opts = ( \%Opt, qw( debugging!
+my %opt = (readline => 1);
+my @opts = ( \%opt, qw( debugging!
                         readline!
-                        help! ) );
-Getopt::Long::GetOptions @Opts or Usage();
-Usage() if $Opt{help};
+                        help!
+                        long-help! ) );
+Getopt::Long::GetOptions @opts or usage();
+usage() if $opt{help} or $opt{'long-help'};
 
 my $inhibit_dump = 0;
 
@@ -71,7 +72,6 @@ my @reserved = qw( acos asin atan atan2 clear cos deg depth drop dropn
                    x y z t );
 my %reserved = map { $_ => 1 } @reserved;
 
-# my ($x, $y, $z, $t);
 my %variables = (
     pi => abs atan2(0, -1),
     e  => exp 1,
@@ -104,7 +104,7 @@ if (@ARGV) {
     Evaluate_Line(join ' ', @ARGV);
 }
 else {
-    if ($Opt{readline} and Init_ReadLine()) {
+    if ($opt{readline} and Init_ReadLine()) {
         while ( defined ($_ = eval q($term->readline(''))) ) {
             Evaluate_Line($_);
         }
@@ -119,8 +119,7 @@ else {
 
 ########################################################################
 
-sub Dump($base) {
-
+sub dump_stack($base) {
     my $i;
     my $format;
 
@@ -149,7 +148,7 @@ sub Dump($base) {
                 printf "%3d: \"%s\"\n", $i, ${$stack[$i]};
             }
             elsif ($base eq 'HMS') {
-                printf $format, $i, To_HMS($stack[$i]);
+                printf $format, $i, to_hms($stack[$i]);
             }
             else {
                 printf $format, $i, $stack[$i];
@@ -159,19 +158,19 @@ sub Dump($base) {
     else {
         print "  <empty stack>\n";
     }
-} # Dump
+} # dump_stack
 
 # ----------------------------------------------------------------------
 
-sub Show_Vars() {
+sub show_vars() {
     foreach my $name (sort keys %variables) {
         printf "%-12s = $ofmt\n", $name, $variables{$name};
     }
-} # Show_Vars
+} # show_vars
 
 # ----------------------------------------------------------------------
 
-sub Is_Numeric($arg) {
+sub is_numeric($arg) {
     return 1 if ref $arg eq 'Math::BigFloat';
     return 0 if ref $arg;
     my $warning = undef;
@@ -191,17 +190,17 @@ sub Is_Numeric($arg) {
     else {
         return 1; # numeric
     }
-} # Is_Numeric
+} # is_numeric
 
 # ----------------------------------------------------------------------
 
-sub Is_HMS($word) {
+sub is_hms($word) {
     return $word =~ /^(\d+:)+\d+$/;
-} # Is_HMS
+} # is_hms
 
 # ----------------------------------------------------------------------
 
-sub From_HMS($word) {
+sub from_hms($word) {
     my @fields;
     my $result = 0;
 
@@ -211,13 +210,13 @@ sub From_HMS($word) {
         $result = $result * 60 + $field;
     }
     return $result;
-} # From_HMS
+} # from_hms
 
 # ----------------------------------------------------------------------
 
-sub To_HMS($word) {
+sub to_hms($word) {
     if (int($word) != $word) {
-        return "To_HMS not yet implemented for fractional values";
+        return "to_hms not yet implemented for fractional values";
     }
     my $sign = '';
     if ($word == 0) {
@@ -233,23 +232,23 @@ sub To_HMS($word) {
         $word = int($word / 60);
     }
     return $sign . join(':', @digits);
-} # To_HMS
+} # to_hms
 
 # ----------------------------------------------------------------------
 
-sub Is_Hex($word) {
+sub is_hex($word) {
     return $word =~ /^0x[\da-f]+$/i;
-} # Is_Hex
+} # is_hex
 
 # ----------------------------------------------------------------------
 
-sub Is_Binary($word) {
+sub is_binary($word) {
     return $word =~ /^0[bB][01]+$/;
-} # Is_Binary
+} # is_binary
 
 # ----------------------------------------------------------------------
 
-sub Help() {
+sub help() {
     print <<'EOF';
     <number>          : Push a number on the stack
     <num>:<num>...    : Push a number in HH:MM::SS format
@@ -297,7 +296,7 @@ sub Help() {
     (...)             : Evaluate Perl expression (no whitespace)
 EOF
 #   print "    ...          : continue (used on command line)"
-} # Help
+} # help
 
 # ----------------------------------------------------------------------
 
@@ -316,7 +315,7 @@ sub Check($word, $count) {
 sub Check_Numeric($word, $count) {
     if ($#stack >= $count) {
         for (my $i = $#stack; $i >= $#stack - $count + 1; $i --) {
-            if (not Is_Numeric($stack[$i])) {
+            if (not is_numeric($stack[$i])) {
                 my $arg = $stack[$i];
                 if (ref $arg eq 'SCALAR') {
                     $arg = $$arg;
@@ -638,7 +637,7 @@ sub Evaluate($word) {
     }
 
     elsif ($word eq 'vars') {
-        Show_Vars();
+        show_vars();
     }
 
     elsif ( $word =~ /^ofmt=$/ ) {
@@ -671,7 +670,7 @@ sub Evaluate($word) {
     }
 
     elsif ($word eq '?' or $word eq 'help') {
-        Help();
+        help();
         $inhibit_dump = 1;
     }
 
@@ -704,25 +703,25 @@ sub Evaluate($word) {
 
     elsif ($word eq 'hms') {
         Check_Numeric($word, 1) and do {
-            print To_HMS($stack[$#stack]), "\n";
+            print to_hms($stack[$#stack]), "\n";
             $inhibit_dump = 1;
         };
     }
 
     elsif ($word eq ',') {
-        Dump(10);
+        dump_stack(10);
     }
 
     elsif ($word eq 'Hex') {
-        Dump(16);
+        dump_stack(16);
     }
 
     elsif ($word eq 'Octal') {
-        Dump(8);
+        dump_stack(8);
     }
 
     elsif ($word eq 'HMS') {
-        Dump('HMS');
+        dump_stack('HMS');
     }
 
 #   else if (word == "...") {
@@ -735,7 +734,7 @@ sub Evaluate($word) {
 
     elsif ($Have_BigInt and
            De_Comma($word) =~ /^[Ii]:\s*(.*)$/ and
-           Is_Numeric($tmp = De_Comma($1)))
+           is_numeric($tmp = De_Comma($1)))
     {
         push @stack, eval 'Math::BigInt->new($tmp)';
         print ">>> pushed BigInt $stack[-1]\n";
@@ -744,28 +743,28 @@ sub Evaluate($word) {
 
     elsif ($Have_BigFloat and
            De_Comma($word) =~ /^[Bb]:\s*(.*)$/ and
-           Is_Numeric($tmp = De_Comma($1)))
+           is_numeric($tmp = De_Comma($1)))
     {
         push @stack, eval 'Math::BigFloat->new($tmp)';
         Set_xyzt();
     }
 
-    elsif (Is_Numeric($tmp = De_Comma($word))) {
+    elsif (is_numeric($tmp = De_Comma($word))) {
         push @stack, $tmp;
         Set_xyzt();
     }
 
-    elsif (Is_HMS($word)) {
-        push @stack, From_HMS($word);
+    elsif (is_hms($word)) {
+        push @stack, from_hms($word);
         Set_xyzt();
     }
 
-    elsif (Is_Hex($word)) {
+    elsif (is_hex($word)) {
         push @stack, hex $word;
         Set_xyzt();
     }
 
-    elsif (Is_Binary($word)) {
+    elsif (is_binary($word)) {
         push @stack, eval $word;
         Set_xyzt();
     }
@@ -807,7 +806,7 @@ sub Evaluate_String($eval_string) {
         if (defined $warning) {
             warn "Warning: $warning\n";
         }
-        if (Is_Numeric($result)) {
+        if (is_numeric($result)) {
             push @stack, $result;
         }
         else {
@@ -851,7 +850,7 @@ sub Evaluate_Line($line) {
     if ($is_eval or (defined $last_arg and
                      $last_arg ne "," and
                      not $inhibit_dump)) {
-        Dump(10);
+        dump_stack(10);
     }
 } # Evaluate_Line
 
@@ -881,7 +880,7 @@ sub Factorial($x) {
 # ----------------------------------------------------------------------
 
 sub Debug(@args) {
-    print @args if $Opt{debugging};
+    print @args if $opt{debugging};
 } # Debug
 
 # ----------------------------------------------------------------------
@@ -930,15 +929,18 @@ sub Init_ReadLine() {
 
 # ----------------------------------------------------------------------
 
-sub Usage(@args) {
+sub usage(@args) {
     print @args if @args;
     print <<"EOF";
-Usage: $Program_Name [options] [RPN expr]
-    -help      : Help
-    -readline  : Use Perl::ReadLine for input (default)
+Usage: $program_name [options] [RPN expr]
+    -help      : Show this message and exit
+    -long-help : Show this message plus command help
+    -readline  : Use Perl::ReadLine for input (default if available)
     -debugging : Debugging
-Commands:
 EOF
-    Help;
+    if ($opt{'long-help'}) {
+        print "Commands:\n";
+        help;
+    }
     exit 1;
-} # Usage
+} # usage
