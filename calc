@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.70 2018-09-21 13:50:51-07 kst Exp $
+# $Id: calc,v 1.71 2019-03-15 17:39:26-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -66,7 +66,7 @@ my $inhibit_dump = 0;
 
 my @stack = qw(BOTTOM);
 
-my @reserved = qw( acos asin atan atan2 clear cos deg depth drop dropn
+my @reserved = qw( acos asin atan atan2 clear cos deg depth drop dropn pick
                    dup exp help hex Hex hms HMS int ln log octal Octal
                    ofmt rad rand sin sqrt srand srandx sumn swap tan vars
                    x y z t );
@@ -263,6 +263,8 @@ sub help() {
     dup               : duplicate top of stack (tos)
     drop              : drop tos
     dropn             : drop tos+1 items from stack
+    pick              : Nth stack element; "1 pick" is equivalent to "dup"
+    depth             : stack depth
     clear             : clear stack
     swap              : swap top two stack elements
     sin, cos, tan, asin, acos, atan :
@@ -347,6 +349,13 @@ sub Evaluate($word) {
     elsif ($word eq 'drop') {
         Check($word, 1) and pop @stack;
         Set_xyzt();
+    }
+
+    elsif ($word eq 'pick') {
+        Check($word, 1);
+        my $n = pop @stack;
+        Check($word, $n);
+        push @stack, $stack[$#stack - $n + 1];
     }
 
     elsif ($word eq 'dropn') {
