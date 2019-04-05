@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.72 2019-04-05 13:26:34-07 kst Exp $
+# $Id: calc,v 1.73 2019-04-05 13:31:08-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -103,18 +103,18 @@ my $degrees_to_radians = $variables{pi} / 180.0;
 my $ofmt = '%.16g';
 
 if (@ARGV) {
-    Evaluate_Line(join ' ', @ARGV);
+    evaluate_line(join ' ', @ARGV);
 }
 else {
-    if ($opt{readline} and Init_ReadLine()) {
+    if ($opt{readline} and init_ReadLine()) {
         while ( defined ($_ = eval q($term->readline(''))) ) {
-            Evaluate_Line($_);
+            evaluate_line($_);
         }
     }
     else {
         while (<>) {
             chomp;
-            Evaluate_Line($_);
+            evaluate_line($_);
         }
     }
 }
@@ -304,7 +304,7 @@ EOF
 
 # ----------------------------------------------------------------------
 
-sub Check($word, $count) {
+sub check($word, $count) {
     if (scalar @stack >= $count) {
         return 1;
     }
@@ -312,11 +312,11 @@ sub Check($word, $count) {
         warn "$word error: too few arguments\n";
         return 0;
     }
-} # Check
+} # check
 
 # ----------------------------------------------------------------------
 
-sub Check_Numeric($word, $count) {
+sub check_numeric($word, $count) {
     if (scalar @stack >= $count) {
         for (my $i = 0; $i < $count; $i ++) {
             if (not is_numeric($stack[$i])) {
@@ -334,25 +334,25 @@ sub Check_Numeric($word, $count) {
         warn "$word error: too few arguments\n";
         return 0;
     }
-} # Check_Numeric
+} # check_numeric
 
 # ----------------------------------------------------------------------
 
-sub Evaluate($word) {
+sub evaluate($word) {
     my $tmp;
 
-    Debug("DEBUG: evaluate \"$word\"\n");
+    debug("DEBUG: evaluate \"$word\"\n");
 
     if ($word eq 'dup') {
-        Check($word, 1) and unshift @stack, $stack[0];
+        check($word, 1) and unshift @stack, $stack[0];
     }
 
     elsif ($word eq 'drop') {
-        Check($word, 1) and shift @stack;
+        check($word, 1) and shift @stack;
     }
 
     elsif ($word eq 'pick') {
-        Check_Numeric($word, 1) and do {
+        check_numeric($word, 1) and do {
             my $n = shift @stack;
             if ($n >= 0 and $n <= $#stack) {
                 unshift @stack, $stack[$n];
@@ -366,7 +366,7 @@ sub Evaluate($word) {
     }
 
     elsif ($word eq 'dropn') {
-        Check_Numeric($word, 1) and do {
+        check_numeric($word, 1) and do {
             my $n = shift @stack;
             if ($n >= 0 and $n <= scalar @stack) {
                 shift @stack for 1 .. $n;
@@ -380,10 +380,10 @@ sub Evaluate($word) {
     }
 
     elsif ($word eq 'sumn') {
-        Check_Numeric($word, 1) and do {
+        check_numeric($word, 1) and do {
             my $n = shift @stack;
             if ($n >= 0 and $n <= scalar @stack) {
-                if (Check_Numeric($word, $n)) {
+                if (check_numeric($word, $n)) {
                     my $sum = 0;
                     for (my $i = 0; $i < $n; $i ++) {
                         $sum += shift @stack;
@@ -408,67 +408,67 @@ sub Evaluate($word) {
     }
 
     elsif ($word eq 'swap') {
-        Check($word, 2) and do {
+        check($word, 2) and do {
             ($stack[0], $stack[1]) = ($stack[1], $stack[0]);
         };
     }
 
     elsif ($word eq '+') {
-        Check_Numeric($word, 2) and do {
+        check_numeric($word, 2) and do {
             $stack[1] += $stack[0];
             shift @stack;
         };
     }
 
     elsif ($word eq '-') {
-        Check_Numeric($word, 2) and do {
+        check_numeric($word, 2) and do {
             $stack[1] -= $stack[0];
             shift @stack;
         };
     }
 
     elsif ($word eq '*') {
-        Check_Numeric($word, 2) and do {
+        check_numeric($word, 2) and do {
             $stack[1] *= $stack[0];
             shift @stack;
         };
     }
 
     elsif ($word eq '/') {
-        Check_Numeric($word, 2) and do {
+        check_numeric($word, 2) and do {
             $stack[1] /= $stack[0];
             shift @stack;
         };
     }
 
     elsif ($word eq '%') {
-        Check_Numeric($word, 2) and do {
+        check_numeric($word, 2) and do {
             $stack[1] %= $stack[0];
             shift @stack;
         };
     }
 
     elsif ($word eq '**') {
-        Check_Numeric($word, 2) and do {
+        check_numeric($word, 2) and do {
             $stack[1] **= $stack[0];
             shift @stack;
         };
     }
 
     elsif ($word eq '--') {
-        Check_Numeric($word, 1) and do {
+        check_numeric($word, 1) and do {
             $stack[0] = - $stack[0];
         }
     }
 
     elsif ($word eq '//') {
-        Check_Numeric($word, 1) and do {
+        check_numeric($word, 1) and do {
             $stack[0] = 1.0 / $stack[0];
         }
     }
 
     elsif ($word eq '%%') {
-        Check_Numeric($word, 2) and do {
+        check_numeric($word, 2) and do {
             my($y, $x) = ($stack[1], $stack[0]);
             $stack[1] = int($x / $y);
             $stack[0] = $x % $y;
@@ -481,7 +481,7 @@ sub Evaluate($word) {
     #
 
     elsif ($word eq '&') {
-        Check_Numeric($word, 2) and do {
+        check_numeric($word, 2) and do {
             my($x, $y) = (\$stack[0], \$stack[1]);
             $$y = (0 + $$y) & (0 + $x);
             shift @stack;
@@ -489,92 +489,92 @@ sub Evaluate($word) {
     }
 
     elsif ($word eq '|') {
-        Check_Numeric($word, 2) and do {
+        check_numeric($word, 2) and do {
             my($y, $x) = (shift @stack, shift @stack);
             unshift @stack, (0 + $x) | (0 + $y);
         }
     }
 
     elsif ($word eq '^') {
-        Check_Numeric($word, 2) and do {
+        check_numeric($word, 2) and do {
             my($y, $x) = (shift @stack, shift @stack);
             unshift @stack, (0 + $x) ^ (0 + $y);
         }
     }
 
     elsif ($word eq '~') {
-        Check_Numeric($word, 1) and $stack[0] = ~ (0 + $stack[0]);
+        check_numeric($word, 1) and $stack[0] = ~ (0 + $stack[0]);
     }
 
     elsif ($word eq '<<') {
-        Check_Numeric($word, 2) and do {
+        check_numeric($word, 2) and do {
             $stack[1] <<= $stack[0];
             shift @stack;
         }
     }
 
     elsif ($word eq '>>') {
-        Check_Numeric($word, 2) and do {
+        check_numeric($word, 2) and do {
             $stack[1] >>= $stack[0];
             shift @stack;
         }
     }
 
     elsif ($word eq 'sin') {
-        Check_Numeric($word, 1) and $stack[0] = sin $stack[0];
+        check_numeric($word, 1) and $stack[0] = sin $stack[0];
     }
 
     elsif ($word eq 'cos') {
-        Check_Numeric($word, 1) and $stack[0] = cos $stack[0];
+        check_numeric($word, 1) and $stack[0] = cos $stack[0];
     }
 
     elsif ($word eq 'tan') {
-        Check_Numeric($word, 1) and do {
+        check_numeric($word, 1) and do {
             $stack[0] = sin($stack[0]) / cos($stack[0]);
         };
     }
 
     elsif ($word eq 'asin') {
-        Check_Numeric($word, 1) and do {
+        check_numeric($word, 1) and do {
             $stack[0] = atan2($stack[0], sqrt(1 - $stack[0]**2));
         };
     }
 
     elsif ($word eq 'acos') {
-        Check_Numeric($word, 1) and do {
+        check_numeric($word, 1) and do {
             $stack[0] = atan2(sqrt(1 - $stack[0]**2), $stack[0]);
         };
     }
 
     elsif ($word eq 'atan') {
-        Check_Numeric($word, 1) and do {
+        check_numeric($word, 1) and do {
             $stack[0] = atan2($stack[0], 1.0);
         };
     }
 
     elsif ($word eq 'atan2') {
-        Check_Numeric($word, 2) and do {
+        check_numeric($word, 2) and do {
             $stack[1] = atan2($stack[0], $stack[1]);
             shift @stack;
         };
     }
 
     elsif ($word eq 'deg') {
-        Check_Numeric($word, 1) and
+        check_numeric($word, 1) and
             $stack[0] *= $degrees_to_radians;
     }
 
     elsif ($word eq 'rad') {
-        Check_Numeric($word, 1) and
+        check_numeric($word, 1) and
             $stack[0] /= $degrees_to_radians;
     }
 
     elsif ($word eq 'exp') {
-        Check_Numeric($word, 1) and $stack[0] = exp $stack[0]
+        check_numeric($word, 1) and $stack[0] = exp $stack[0]
     }
 
     elsif ($word eq 'ln' or $word eq 'loge') {
-        Check_Numeric($word, 1) and $stack[0] = log $stack[0]
+        check_numeric($word, 1) and $stack[0] = log $stack[0]
     }
 
     elsif ($word eq 'log' or $word eq 'log10') {
@@ -586,11 +586,11 @@ sub Evaluate($word) {
     }
 
     elsif ($word eq 'int') {
-        Check_Numeric($word, 1) and $stack[0] = int($stack[0]);
+        check_numeric($word, 1) and $stack[0] = int($stack[0]);
     }
 
     elsif ($word eq 'srandx') {
-        Check_Numeric($word, 1) and srand shift @stack;
+        check_numeric($word, 1) and srand shift @stack;
     }
 
     elsif ($word eq 'srand') {
@@ -602,15 +602,15 @@ sub Evaluate($word) {
     }
 
     elsif ($word eq 'randx') {
-        Check_Numeric($word, 1) and $stack[0] = rand($stack[0]);
+        check_numeric($word, 1) and $stack[0] = rand($stack[0]);
     }
 
     elsif ($word eq 'sqrt') {
-        Check_Numeric($word, 1) and $stack[0] = sqrt($stack[0]);
+        check_numeric($word, 1) and $stack[0] = sqrt($stack[0]);
     }
 
     elsif ($word eq '!') {
-        Check_Numeric($word, 1) and $stack[0] = Factorial($stack[0]);
+        check_numeric($word, 1) and $stack[0] = factorial($stack[0]);
     }
 
     elsif ($word eq 'vars') {
@@ -630,7 +630,7 @@ sub Evaluate($word) {
         if (defined $reserved{$var_name}) {
             print "= error: reserved name\n";
         } else {
-            Check($word, 1) and $variables{$var_name} = shift @stack;
+            check($word, 1) and $variables{$var_name} = shift @stack;
         }
     }
 
@@ -649,21 +649,21 @@ sub Evaluate($word) {
     }
 
     elsif ($word eq '.') {
-        Check($word, 1) and do {
+        check($word, 1) and do {
             printf "$ofmt\n", shift @stack;
             $inhibit_dump = 1;
         };
     }
 
     elsif ($word eq 'hex') {
-        Check_Numeric($word, 1) and do {
+        check_numeric($word, 1) and do {
             printf "0x%x\n", int $stack[0];
             $inhibit_dump = 1;
         };
     }
 
     elsif ($word eq 'octal') {
-        Check_Numeric($word, 1) and do {
+        check_numeric($word, 1) and do {
             #
             # Workaround for mysterious bug, drops '0' and newline
             #
@@ -675,7 +675,7 @@ sub Evaluate($word) {
     }
 
     elsif ($word eq 'hms') {
-        Check_Numeric($word, 1) and do {
+        check_numeric($word, 1) and do {
             print to_hms($stack[0]), "\n";
             $inhibit_dump = 1;
         };
@@ -706,21 +706,21 @@ sub Evaluate($word) {
     }
 
     elsif ($Have_BigInt and
-           De_Comma($word) =~ /^[Ii]:\s*(.*)$/ and
-           is_numeric($tmp = De_Comma($1)))
+           de_comma($word) =~ /^[Ii]:\s*(.*)$/ and
+           is_numeric($tmp = de_comma($1)))
     {
         unshift @stack, eval 'Math::BigInt->new($tmp)';
         # print ">>> pushed BigInt $stack[0]\n";
     }
 
     elsif ($Have_BigFloat and
-           De_Comma($word) =~ /^[Bb]:\s*(.*)$/ and
-           is_numeric($tmp = De_Comma($1)))
+           de_comma($word) =~ /^[Bb]:\s*(.*)$/ and
+           is_numeric($tmp = de_comma($1)))
     {
         unshift @stack, eval 'Math::BigFloat->new($tmp)';
     }
 
-    elsif (is_numeric($tmp = De_Comma($word))) {
+    elsif (is_numeric($tmp = de_comma($word))) {
         unshift @stack, $tmp;
     }
 
@@ -744,24 +744,24 @@ sub Evaluate($word) {
     if (ref $stack[0] eq 'Math::BigInt') {
         $stack[0] = eval 'new Math::BigFloat $stack[0]';
     }
-} # Evaluate
+} # evaluate
 
 # ----------------------------------------------------------------------
 
-sub Evaluate_String($eval_string) {
+sub evaluate_string($eval_string) {
     my $result;
     my $warning = undef;
 
-    Debug("DEBUG: \$eval_string = \"$eval_string\"\n");
+    debug("DEBUG: \$eval_string = \"$eval_string\"\n");
     {
         local $SIG{'__WARN__'} = sub { $warning = $_[0] };
         {
             no strict;
             $result = eval $eval_string;
         }
-        Debug("DEBUG: \$result  = ",  Image($result),  "\n");
-        Debug("DEBUG: \$\@       = ", Image($@),       "\n");
-        Debug("DEBUG: \$warning = ",  Image($warning), "\n");
+        debug("DEBUG: \$result  = ",  image($result),  "\n");
+        debug("DEBUG: \$\@       = ", image($@),       "\n");
+        debug("DEBUG: \$warning = ",  image($warning), "\n");
         if (defined $warning) {
             $warning =~ s/ at .*$//;
         }
@@ -777,7 +777,7 @@ sub Evaluate_String($eval_string) {
             unshift @stack, $result;
         }
         else {
-            # warn "Result = ", Image($result), " is non-numeric\n";
+            # warn "Result = ", image($result), " is non-numeric\n";
             unshift @stack, \$result;
         }
     }
@@ -789,29 +789,29 @@ sub Evaluate_String($eval_string) {
             warn "Error: $@\n";
         }
     }
-} # Evaluate_String
+} # evaluate_string
 
 # ----------------------------------------------------------------------
 
-sub Evaluate_Line($line) {
+sub evaluate_line($line) {
     my $last_arg;
     my $is_eval;
 
-    Debug("DEBUG: evaluate_line \"$line\"\n");
+    debug("DEBUG: evaluate_line \"$line\"\n");
     $inhibit_dump = 0;
 
     $line =~ s/^\s*//;
     $line =~ s/\s*$//;
     if ($line =~ /^:\s*(.*)$/) {
         $is_eval = 1;
-        Evaluate_String($1);
+        evaluate_string($1);
     }
     else {
         $is_eval = 0;
         foreach my $arg (split /\s+/, $line) {
             $last_arg = $arg;
-            Debug("DEBUG: calling evaluate \"$arg\"\n");
-            Evaluate($arg);
+            debug("DEBUG: calling evaluate \"$arg\"\n");
+            evaluate($arg);
         }
     }
     if ($is_eval or (defined $last_arg and
@@ -819,11 +819,11 @@ sub Evaluate_Line($line) {
                      not $inhibit_dump)) {
         dump_stack(10);
     }
-} # Evaluate_Line
+} # evaluate_line
 
 # ----------------------------------------------------------------------
 
-sub Factorial($x) {
+sub factorial($x) {
     if ($x != int $x) {
         warn "Factorial requires an integer argument\n";
         return $x;
@@ -842,17 +842,17 @@ sub Factorial($x) {
         }
         return $result;
     }
-} # Factorial
+} # factorial
 
 # ----------------------------------------------------------------------
 
-sub Debug(@args) {
+sub debug(@args) {
     print @args if $opt{debugging};
-} # Debug
+} # debug
 
 # ----------------------------------------------------------------------
 
-sub Image($result) {
+sub image($result) {
     if (defined $result) {
         $result =~ s/\n/\\n/g;
         return "\"$result\"";
@@ -860,18 +860,18 @@ sub Image($result) {
     else {
         return "undef";
     }
-} # Image
+} # image
 
 # ----------------------------------------------------------------------
 
-sub De_Comma($s) {
+sub de_comma($s) {
     $s =~ s/,//g;
     return $s;
-} # De_Comma
+} # de_comma
 
 # ----------------------------------------------------------------------
 
-sub Init_ReadLine() {
+sub init_ReadLine() {
     our $initialized;
     if (not $initialized) {
         if ($Have_Term_ReadLine) {
@@ -883,7 +883,7 @@ sub Init_ReadLine() {
             return 0;
         }
     }
-}
+} # init_ReadLine
 
 # ----------------------------------------------------------------------
 
