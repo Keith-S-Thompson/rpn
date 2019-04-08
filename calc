@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.73 2019-04-05 13:31:08-07 kst Exp $
+# $Id: calc,v 1.74 2019-04-07 17:17:36-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -10,21 +10,20 @@
 #
 
 # TODO:
-# Make @stack a stack of stacks, each element of which is an array
-# reference.  The new "(" operator pushes a new stack on the stack
-# of stacks; ")" slurps the current stack into an array, pops it,
-# and pushes a reference to it onto the new stack.  TODO: Think of
-# a better way to describe this.  Probably better to think of it as
-# a stack of lists.
+# Allow a list as a stack element, implemented as an array reference.
+# The new "(" operator pushes a new list onto the stack; ")" slurps the
+# current stack into an array, pops it, and pushes a reference to it
+# onto the stack.
 #
 # If a stack element is an array reference, display its elements
 # surrounded by parentheses.
 #
-# For example, this:
+# For example, given this:
 #     ( 10 20 30 )
-# creates a new stack, pushes the values 10 20 30 onto it, then
-# pushes [ 10, 20, 30 ] onto the previous stack and pops the
-# new stack.
+# the "(" creates a new list and puts us into list-building mode.
+# Each number is then pushed onto the list on top of the stack.
+# The ")" takes us out of list-building mode.
+# Result: TOS is \(10, 20, 30)
 #
 # I can then define array operations, such as replacing a list
 # with the differences between its successive members:
@@ -578,11 +577,11 @@ sub evaluate($word) {
     }
 
     elsif ($word eq 'log' or $word eq 'log10') {
-        heck_Numeric($word, 1) and $stack[0] = log($stack[0]) / log(10.0);
+        check_numeric($word, 1) and $stack[0] = log($stack[0]) / log(10.0);
     }
 
     elsif ($word eq 'lg' or $word eq 'log2') {
-        heck_Numeric($word, 1) and $stack[0] = log($stack[0]) / log(2.0);
+        check_numeric($word, 1) and $stack[0] = log($stack[0]) / log(2.0);
     }
 
     elsif ($word eq 'int') {
