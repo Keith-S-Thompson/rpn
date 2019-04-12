@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.75 2019-04-11 21:45:56-07 kst Exp $
+# $Id: calc,v 1.76 2019-04-11 22:03:42-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -255,6 +255,7 @@ sub help() {
     <num>:<num>...    : Push a number in HH:MM::SS format
     I:<number>        : Push a BigInt on the stack
     B:<number>        : Push a BigFloat on the stack
+    <num>_<unit>      : num * unit, where <unit> can be any variable name
     +, -, *, /, %, ** : arithmetic operators
     --                : negate
     //                : reciprocal
@@ -339,6 +340,7 @@ sub check_numeric($word, $count) {
 
 sub evaluate($word) {
     my $tmp;
+    my $tmp2;
 
     debug("DEBUG: evaluate \"$word\"\n");
 
@@ -723,6 +725,10 @@ sub evaluate($word) {
         unshift @stack, $tmp;
     }
 
+    elsif (($tmp, $tmp2) = split_units($word), defined $tmp2) {
+        unshift @stack, $tmp * $variables{$tmp2};
+    }
+
     elsif (is_hms($word)) {
         unshift @stack, from_hms($word);
     }
@@ -867,6 +873,19 @@ sub de_comma($s) {
     $s =~ s/,//g;
     return $s;
 } # de_comma
+
+# ----------------------------------------------------------------------
+
+sub split_units($s) {
+    my($num, $unit) = ($s =~ /^([^_]+)_([^_]+)$/);
+    if (defined $unit and is_numeric($num) and defined $variables{$unit})
+    {
+        return ($num, $unit);
+    }
+    else {
+        return undef;
+    }
+}
 
 # ----------------------------------------------------------------------
 
