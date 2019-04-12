@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.74 2019-04-07 17:17:36-07 kst Exp $
+# $Id: calc,v 1.75 2019-04-11 21:45:56-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -77,26 +77,26 @@ my %variables = (
     pi => abs atan2(0, -1),
     e  => exp 1,
     phi => (sqrt(5) + 1) / 2,
-    k  => 2**10,
-    M  => 2**20,
-    G  => 2**30,
-    T  => 2**40,
-    P  => 2**50,
-    E  => 2**60,
-    Z  => 2**70,
-    Y  => 2**80,
-    hundred => 1e2,
-    thousand => 1e3,
-    million => 1e6,
-    billion => 1e9,
-    trillion => 1e12,
+    Ki => 2**10, K => 1e3,
+    Mi => 2**20, M => 1e6,
+    Gi => 2**30, G => 1e9,
+    Ti => 2**40, T => 1e12,
+    Pi => 2**50, P => 1e15,
+    Ei => 2**60, E => 1e18,
+    Zi => 2**70, Z => 1e21,
+    Yi => 2**80, Y => 1e24,
+    hundred     => 1e2,
+    thousand    => 1e3,
+    million     => 1e6,
+    billion     => 1e9,
+    trillion    => 1e12,
     quadrillion => 1e15,
     quintillion => 1e18,
-    sextillion => 1e21,
-    septillion => 1e24,
-    octillion => 1e27,
-    nonillion => 1e30,
-    decillion => 1e33
+    sextillion  => 1e21,
+    septillion  => 1e24,
+    octillion   => 1e27,
+    nonillion   => 1e30,
+    decillion   => 1e33,
 );
 my $degrees_to_radians = $variables{pi} / 180.0;
 my $ofmt = '%.16g';
