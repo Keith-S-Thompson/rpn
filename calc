@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.76 2019-04-11 22:03:42-07 kst Exp $
+# $Id: calc,v 1.77 2019-05-13 23:44:08-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -129,7 +129,7 @@ sub dump_stack($base) {
         return;
     }
 
-    if ($base eq 'HMS') {
+    if ($base eq 'HMS' or $base eq 'Comma') {
         $format = "%3d: %s\n";
     }
     else {
@@ -155,10 +155,14 @@ sub dump_stack($base) {
         elsif ($base eq 'HMS') {
             printf $format, $i, to_hms($stack[$i]);
         }
+        elsif ($base eq 'Comma') {
+            printf $format, $i, add_commas($stack[$i]);
+        }
         else {
             printf $format, $i, $stack[$i];
         }
     }
+    $inhibit_dump = 1;
 } # dump_stack
 
 # ----------------------------------------------------------------------
@@ -237,6 +241,22 @@ sub to_hms($word) {
 
 # ----------------------------------------------------------------------
 
+sub add_commas($word) {
+    $word = sprintf $ofmt, $word;
+    return $word if $word =~ /[eE]/;
+    my ($sign, $integer, $dot, $after) = ($word =~ /^([-+]?)(\d+)(\.?)(.*)$/);
+    return $word if $integer eq '';
+
+    $integer = reverse $integer;
+    $integer =~ s/(...)/$&,/g;
+    $integer =~ s/,$//;
+    $integer = reverse $integer;
+
+    return "$sign$integer$dot$after";
+} # add_commas
+
+# ----------------------------------------------------------------------
+
 sub is_hex($word) {
     return $word =~ /^0x[\da-f]+$/i;
 } # is_hex
@@ -291,10 +311,12 @@ sub help() {
     hex               : display tos in hex
     octal             : display tos in octal
     hms               : display tos in H:M:S format
+    comma             : display tos with commas, e.g., "12,345,678.901234"
     ,                 : dump stack
     Hex               : dump stack in hex
     Octal             : dump stack in octal
     HMS               : dump stack in H:M:S format
+    Comma             : dump stack with commas
     \                 : inhibit stack dump
     : ...             : Evaluate Perl expression (one line only)
     (...)             : Evaluate Perl expression (no whitespace)
@@ -682,6 +704,13 @@ sub evaluate($word) {
         };
     }
 
+    elsif ($word eq 'comma') {
+        check_numeric($word, 1) and do {
+            print add_commas($stack[0]), "\n";
+            $inhibit_dump = 1;
+        };
+    }
+
     elsif ($word eq ',') {
         dump_stack(10);
     }
@@ -696,6 +725,10 @@ sub evaluate($word) {
 
     elsif ($word eq 'HMS') {
         dump_stack('HMS');
+    }
+
+    elsif ($word eq 'Comma') {
+        dump_stack('Comma');
     }
 
 #   else if (word == "...") {
