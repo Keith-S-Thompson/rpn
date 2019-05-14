@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.77 2019-05-13 23:44:08-07 kst Exp $
+# $Id: calc,v 1.78 2019-05-14 16:11:07-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 #
@@ -34,6 +34,7 @@
 #
 # Consider an optional Curses::UI interface
 #
+# Autocomplete for variable names (if Term::ReadLine is available)
 
 use strict;
 use warnings;
@@ -85,18 +86,28 @@ my %variables = (
     Ei => 2**60, E => 1e18,
     Zi => 2**70, Z => 1e21,
     Yi => 2**80, Y => 1e24,
-    hundred     => 1e2,
-    thousand    => 1e3,
-    million     => 1e6,
-    billion     => 1e9,
-    trillion    => 1e12,
-    quadrillion => 1e15,
-    quintillion => 1e18,
-    sextillion  => 1e21,
-    septillion  => 1e24,
-    octillion   => 1e27,
-    nonillion   => 1e30,
-    decillion   => 1e33,
+    hundred           => 1e2,
+    thousand          => 1e3,
+    million           => 1e6,
+    billion           => 1e9,
+    trillion          => 1e12,
+    quadrillion       => 1e15,
+    quintillion       => 1e18,
+    sextillion        => 1e21,
+    septillion        => 1e24,
+    octillion         => 1e27,
+    nonillion         => 1e30,
+    decillion         => 1e33,
+    undecillion       => 1e36,
+    duodecillion      => 1e39,
+    tredecillion      => 1e42,
+    quattuordecillion => 1e45,
+    quindecillion     => 1e48,
+    sexdecillion      => 1e51,
+    septendecillion   => 1e54,
+    octodecillion     => 1e57,
+    novemdecillion    => 1e60,
+    vigintillion      => 1e63,
 );
 my $degrees_to_radians = $variables{pi} / 180.0;
 my $ofmt = '%.16g';
