@@ -1,13 +1,11 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.78 2019-05-14 16:11:07-07 kst Exp $
+# $Id: calc,v 1.79 2019-07-30 20:07:22-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
-#
 # Valid @stack runs from 0 to $#stack inclusive.
-# Index 0 is the top of the stack, so we use
+# Index 0 is the "top" of the stack, so we use
 # shift/unshift rather than push/pop.
-#
 
 # TODO:
 # Allow a list as a stack element, implemented as an array reference.
@@ -35,6 +33,9 @@
 # Consider an optional Curses::UI interface
 #
 # Autocomplete for variable names (if Term::ReadLine is available)
+#
+# Construct help() output from the same source as pod2usage()
+# (or just make "help" and "?" invoke pod2usage())
 
 use strict;
 use warnings;
@@ -43,7 +44,7 @@ use feature 'signatures';
 no warnings 'experimental::signatures';
 
 use Getopt::Long ();
-use File::Spec ();
+use Pod::Usage ();
 
 eval 'use Math::BigInt';
 my($Have_BigInt) = ( $@ eq '' );
@@ -55,15 +56,23 @@ eval 'use Term::ReadLine';
 my($Have_Term_ReadLine) = ( $@ eq '' );
 my($term);
 
-my $program_name = (File::Spec->splitpath($0))[2];
-
-my %opt = (readline => 1);
-my @opts = ( \%opt, qw( debugging!
-                        readline!
-                        help!
-                        long-help! ) );
-Getopt::Long::GetOptions @opts or usage();
-usage() if $opt{help} or $opt{'long-help'};
+my %opt = (
+    readline => 1
+);
+Getopt::Long::GetOptions(
+    \%opt,
+    qw( help|hel|he|h!
+        help1!
+        help2!
+        man!
+        readline!
+        debugging!
+    )
+) or Pod::Usage::pod2usage(-verbose => 0, -exitvalue => 2);
+Pod::Usage::pod2usage(-verbose => 2, -exitvalue => 0) if $opt{man};
+Pod::Usage::pod2usage(-verbose => 2, -exitvalue => 0, -perldocopt, '-T -t') if $opt{help2};
+Pod::Usage::pod2usage(-verbose => 1, -exitvalue => 0) if $opt{help1};
+Pod::Usage::pod2usage(-verbose => 0, -exitvalue => 0) if $opt{help};
 
 my $inhibit_dump = 0;
 
@@ -129,7 +138,7 @@ else {
     }
 }
 
-########################################################################
+# ----------------------------------------------------------------------
 
 sub dump_stack($base) {
     my $i;
@@ -174,17 +183,13 @@ sub dump_stack($base) {
         }
     }
     $inhibit_dump = 1;
-} # dump_stack
-
-# ----------------------------------------------------------------------
+}
 
 sub show_vars() {
     foreach my $name (sort keys %variables) {
         printf "%-12s = $ofmt\n", $name, $variables{$name};
     }
-} # show_vars
-
-# ----------------------------------------------------------------------
+}
 
 sub is_numeric($arg) {
     return 1 if ref $arg eq 'Math::BigFloat';
@@ -206,15 +211,11 @@ sub is_numeric($arg) {
     else {
         return 1; # numeric
     }
-} # is_numeric
-
-# ----------------------------------------------------------------------
+}
 
 sub is_hms($word) {
     return $word =~ /^(\d+:)+\d+$/;
-} # is_hms
-
-# ----------------------------------------------------------------------
+}
 
 sub from_hms($word) {
     my @fields;
@@ -226,9 +227,7 @@ sub from_hms($word) {
         $result = $result * 60 + $field;
     }
     return $result;
-} # from_hms
-
-# ----------------------------------------------------------------------
+}
 
 sub to_hms($word) {
     if (int($word) != $word) {
@@ -248,9 +247,7 @@ sub to_hms($word) {
         $word = int($word / 60);
     }
     return $sign . join(':', @digits);
-} # to_hms
-
-# ----------------------------------------------------------------------
+}
 
 sub add_commas($word) {
     $word = sprintf $ofmt, $word;
@@ -264,21 +261,15 @@ sub add_commas($word) {
     $integer = reverse $integer;
 
     return "$sign$integer$dot$after";
-} # add_commas
-
-# ----------------------------------------------------------------------
+}
 
 sub is_hex($word) {
     return $word =~ /^0x[\da-f]+$/i;
-} # is_hex
-
-# ----------------------------------------------------------------------
+}
 
 sub is_binary($word) {
     return $word =~ /^0[bB][01]+$/;
-} # is_binary
-
-# ----------------------------------------------------------------------
+}
 
 sub help() {
     print <<'EOF';
@@ -333,9 +324,7 @@ sub help() {
     (...)             : Evaluate Perl expression (no whitespace)
 EOF
 #   print "    ...          : continue (used on command line)"
-} # help
-
-# ----------------------------------------------------------------------
+}
 
 sub check($word, $count) {
     if (scalar @stack >= $count) {
@@ -345,9 +334,7 @@ sub check($word, $count) {
         warn "$word error: too few arguments\n";
         return 0;
     }
-} # check
-
-# ----------------------------------------------------------------------
+}
 
 sub check_numeric($word, $count) {
     if (scalar @stack >= $count) {
@@ -367,9 +354,7 @@ sub check_numeric($word, $count) {
         warn "$word error: too few arguments\n";
         return 0;
     }
-} # check_numeric
-
-# ----------------------------------------------------------------------
+}
 
 sub evaluate($word) {
     my $tmp;
@@ -682,6 +667,11 @@ sub evaluate($word) {
         $inhibit_dump = 1;
     }
 
+    elsif ($word eq 'man') {
+        Pod::Usage::pod2usage(-verbose => 2, -exitvalue => 'NOEXIT');
+        $inhibit_dump = 1;
+    }
+
     elsif ($word eq '.') {
         check($word, 1) and do {
             printf "$ofmt\n", shift @stack;
@@ -793,9 +783,7 @@ sub evaluate($word) {
     if (ref $stack[0] eq 'Math::BigInt') {
         $stack[0] = eval 'new Math::BigFloat $stack[0]';
     }
-} # evaluate
-
-# ----------------------------------------------------------------------
+}
 
 sub evaluate_string($eval_string) {
     my $result;
@@ -838,9 +826,7 @@ sub evaluate_string($eval_string) {
             warn "Error: $@\n";
         }
     }
-} # evaluate_string
-
-# ----------------------------------------------------------------------
+}
 
 sub evaluate_line($line) {
     my $last_arg;
@@ -868,9 +854,7 @@ sub evaluate_line($line) {
                      not $inhibit_dump)) {
         dump_stack(10);
     }
-} # evaluate_line
-
-# ----------------------------------------------------------------------
+}
 
 sub factorial($x) {
     if ($x != int $x) {
@@ -891,15 +875,11 @@ sub factorial($x) {
         }
         return $result;
     }
-} # factorial
-
-# ----------------------------------------------------------------------
+}
 
 sub debug(@args) {
     print @args if $opt{debugging};
-} # debug
-
-# ----------------------------------------------------------------------
+}
 
 sub image($result) {
     if (defined $result) {
@@ -909,16 +889,12 @@ sub image($result) {
     else {
         return "undef";
     }
-} # image
-
-# ----------------------------------------------------------------------
+}
 
 sub de_comma($s) {
     $s =~ s/,//g;
     return $s;
-} # de_comma
-
-# ----------------------------------------------------------------------
+}
 
 sub split_units($s) {
     my($num, $unit) = ($s =~ /^([^_]+)_([^_]+)$/);
@@ -927,11 +903,9 @@ sub split_units($s) {
         return ($num, $unit);
     }
     else {
-        return undef;
+        return ();
     }
 }
-
-# ----------------------------------------------------------------------
 
 sub init_ReadLine() {
     our $initialized;
@@ -945,22 +919,283 @@ sub init_ReadLine() {
             return 0;
         }
     }
-} # init_ReadLine
+}
 
-# ----------------------------------------------------------------------
+########################################################################
 
-sub usage(@args) {
-    print @args if @args;
-    print <<"EOF";
-Usage: $program_name [options] [RPN expr]
-    -help      : Show this message and exit
-    -long-help : Show this message plus command help
-    -readline  : Use Perl::ReadLine for input (default if available)
-    -debugging : Debugging
-EOF
-    if ($opt{'long-help'}) {
-        print "Commands:\n";
-        help;
-    }
-    exit 1;
-} # usage
+__END__
+
+=head1 NAME
+
+calc - Text-mode RPN calculator
+
+=head1 SYNOPSIS
+
+calc [options]
+
+ Options:
+    -help   Show short usage message
+    -help1  Show medium usage message
+    -help2  Show long usage message
+    -man    Show long usage message (invokes pager)
+
+    -[no]readline Use Perl::ReadLine for input (default if available)
+    -debugging    Debugging (developer option)
+
+=head1 DESCRIPTION
+
+B<calc> is a text-mode RPN calculator
+
+Operands and commands may be entered as text or as command-line arguments.
+Multiple command may be entered on a line.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-help>
+
+Show short usage message
+
+=item B<-help1>
+
+Show medium usage message
+
+=item B<-help2>
+
+Show long usage message
+
+=item B<-man>
+
+Show long usage message using B<perldoc>, invokes pager
+
+=item B<-[no]readline>
+
+Use C<Perl::ReadLine> for input (enabled by default if available)
+
+=item B<-debugging>
+
+Enable debugging (developer option)
+
+=back
+
+=head1 COMMANDS AND OPERANDS
+
+=over 4
+
+=item B<?, help>
+
+Show help message
+
+=item B<man>
+
+Show man page (like C<calc -man>)
+
+=item B<number>
+
+Push a number onto the stack
+
+The number may be integer (decimal or hexadecimal) or floating-point.
+
+=item B<num:num:...>
+
+Push a number in HH:MM:SS format (base 60)
+
+=item B<I:number>
+
+Push a BigInt on the stack
+
+=item B<B:number>
+
+Push a BigFloat on the stack
+
+=item B<E<lt>numE<gt>_E<lt>unitE<gt>>
+
+num * unit, where <unit> can be any variable name
+
+Anything not recognized as a number or command is pushed onto the
+stack as a string.
+
+=item B<+, -, *, /, %, **>
+
+Arithmetic operators
+
+=item B<-->
+
+Negate
+
+=item B<//>
+
+Reciprocal
+
+=item B<%%>
+
+Push quotient and remainder
+
+=item B<& | ^ ~ E<lt>E<lt> E<gt>E<gt>>
+
+Bitwise operators
+
+=item B<sumn>
+
+Sum of top B<TOS> stack elements
+
+For example B<10 20 30 3 sumn> yields B<30>
+
+=item B<dup>
+
+Duplicate TOS (top of stack)
+
+=item B<drop>
+
+Drop TOS
+
+=item B<dropn>
+
+Drop B<TOS+1> items from stack
+
+=item B<pick>
+
+Nth stack element; B<1 pick> is equivalent to <dup>
+
+=item B<depth>
+
+Push stack depth
+
+=item B<clear>
+
+Clear stack; equivalent to B<depth dropn>
+
+=item B<swap>
+
+Swap top two stack elements
+
+=item B<sin, cos, tan, asin, acos, atan>
+
+Trigonometric functions (in radians)
+
+=item B<atan2>
+
+B<atan(y/x)>
+
+=item B<deg>
+
+Convert degrees to radians
+
+=item B<rad>
+
+Convert radians to degrees
+
+=item B<exp>
+
+B<e**x>
+
+=item B<ln, loge>
+
+log base B<e>
+
+=item B<log, log10>
+
+log base 10
+
+=item B<lg, log2>
+
+log base 2
+
+=item B<int>
+
+Integer part (truncate towards 0)
+
+=item B<srand>
+
+Set random seed
+
+=item B<srandx>
+
+Set random seed to specified value
+
+=item B<rand>
+
+Random number between 0.0 and 1.0
+
+=item B<sqrt>
+
+Square root
+
+=item B<vars>
+
+Show all variables
+
+=item B<E<lt>nameE<gt>=>
+
+Assign variable
+
+For example B<42 answer=> assigns the value B<42> to the variable B<answer>
+
+=item B<ofmt=>
+
+Show output format (default is C<"%.16g">)
+
+=item B<ofmt=E<lt>fmtE<gt>>
+
+Set output format
+
+=item B<.> (dot)
+
+Display TOS (top of stack)
+
+=item B<hex>
+
+Display TOS in hexadecimal
+
+=item B<octal>
+
+Display TOS in octal
+
+=item B<hms>
+
+Display TOS in H:M:S format (base 60) (currently limited to integers)
+
+=item B<comma>
+
+Display TOS with commas, e.g., C<"12,345,678.901234">
+
+=item <,> (comma character)
+
+Dump stack
+
+=item B<Hex>
+
+Dump stack in hexadecimal
+
+=item B<Octal>
+
+Dump stack in octal
+
+=item B<HMS>
+
+dump stack in H:M:S format (base 60)
+
+=item B<Comma>
+
+Dump stack with commas
+
+=item B<\>
+
+Inhibit stack dump
+
+=item B<: ...>
+
+Evaluate Perl expression (one line only)
+
+=item B<(...)>
+
+Evaluate Perl expression (no whitespace)
+
+=back
+
+=head1 AUTHOR
+
+Keith Thompson <Keith.S.Thompson@gmail.com>
+
+=cut
