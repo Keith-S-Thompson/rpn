@@ -1,8 +1,5 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.80 2019-08-06 15:06:58-07 kst Exp $
-# $Source: /home/kst/calc/calc,v $
-
 # Valid @stack runs from 0 to $#stack inclusive.
 # Index 0 is the "top" of the stack, so we use
 # shift/unshift rather than push/pop.
