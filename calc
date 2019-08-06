@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: calc,v 1.79 2019-07-30 20:07:22-07 kst Exp $
+# $Id: calc,v 1.80 2019-08-06 15:06:58-07 kst Exp $
 # $Source: /home/kst/calc/calc,v $
 
 # Valid @stack runs from 0 to $#stack inclusive.
@@ -1191,6 +1191,44 @@ Evaluate Perl expression (one line only)
 =item B<(...)>
 
 Evaluate Perl expression (no whitespace)
+
+=back
+
+=head1 PREDEFINED VARIABLESS
+
+=over 4
+
+=item B<pi>
+
+3.141592653589793
+
+=item B<e>
+
+2.718281828459045 (Euler's constant)
+
+=item B<phi>
+
+1.618033988749895 (golden ratio)
+
+=item B<K>, B<M>, B<G>, B<T>, B<P>, B<E>, B<Z>, B<Y>
+
+Metric prefixes (decimal), 1000, 1000000, ...
+
+kilo, mega, giga, tera, peta, exa, zetta, yotta
+
+=item B<Ki>, B<Mi>, B<Gi>, B<Ti>, B<Pi>, B<Ei>, B<Zi>, B<Yi>
+
+Metric prefixes (binary), 1024, 1048576, ...
+
+kibi, mebi, gibi, tebi, pebi, exbi, zebi, yobi
+
+=item B<hundred>
+
+100
+
+=item B<thousand>, B<million>, B<billion>, B<trillion>, B<quadrillion>, B<quintillion>, B<sextillion>, B<septillion>, B<octillion>, B<nonillion>, B<decillion>, B<undecillion>, B<duodecillion>, B<tredecillion>, B<quattuordecillion>, B<quindecillion>, B<sexdecillion>, B<septendecillion>, B<octodecillion>, B<novemdecillion>, B<vigintillion>
+
+Powers of 1000
 
 =back
 
