@@ -16,4 +16,6 @@ Perl 5.20.  The included `nosig` script, invoked via `make nosig`,
 creates a version of `calc` that does not use signatures, for use on
 systems with older versions of Perl.
 
+You might need to adjust the `#!/usr/bin/perl` line for your system.
+
 `make` with no arguments creates the documentation files and `calc_nosig`.
