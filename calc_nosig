@@ -1,0 +1,1258 @@
+#!/usr/bin/perl
+
+# Valid @stack runs from 0 to $#stack inclusive.
+# Index 0 is the "top" of the stack, so we use
+# shift/unshift rather than push/pop.
+
+# TODO:
+# Allow a list as a stack element, implemented as an array reference.
+# The new "(" operator pushes a new list onto the stack; ")" slurps the
+# current stack into an array, pops it, and pushes a reference to it
+# onto the stack.
+#
+# If a stack element is an array reference, display its elements
+# surrounded by parentheses.
+#
+# For example, given this:
+#     ( 10 20 30 )
+# the "(" creates a new list and puts us into list-building mode.
+# Each number is then pushed onto the list on top of the stack.
+# The ")" takes us out of list-building mode.
+# Result: TOS is \(10, 20, 30)
+#
+# I can then define array operations, such as replacing a list
+# with the differences between its successive members:
+#     ( 10 12 17 20 ) --> ( 2 5 3 )
+# Hmm.  Look at Perl6 operators and consider stealing some of them.
+#
+# Implement to_hms for fractional values.
+#
+# Consider an optional Curses::UI interface
+#
+# Autocomplete for variable names (if Term::ReadLine is available)
+#
+# Construct help() output from the same source as pod2usage()
+# (or just make "help" and "?" invoke pod2usage())
+
+use strict;
+use warnings;
+
+# use feature 'signatures';
+# no warnings 'experimental::signatures';
+
+use Getopt::Long ();
+use Pod::Usage ();
+
+eval 'use Math::BigInt';
+my($Have_BigInt) = ( $@ eq '' );
+
+eval 'use Math::BigFloat';
+my($Have_BigFloat) = ( $@ eq '' );
+
+eval 'use Term::ReadLine';
+my($Have_Term_ReadLine) = ( $@ eq '' );
+my($term);
+
+my %opt = (
+    readline => 1
+);
+Getopt::Long::GetOptions(
+    \%opt,
+    qw( help|hel|he|h!
+        help1!
+        help2!
+        man!
+        readline!
+        debugging!
+    )
+) or Pod::Usage::pod2usage(-verbose => 0, -exitvalue => 2);
+Pod::Usage::pod2usage(-verbose => 2, -exitvalue => 0) if $opt{man};
+Pod::Usage::pod2usage(-verbose => 2, -exitvalue => 0, -perldocopt, '-T -t') if $opt{help2};
+Pod::Usage::pod2usage(-verbose => 1, -exitvalue => 0) if $opt{help1};
+Pod::Usage::pod2usage(-verbose => 0, -exitvalue => 0) if $opt{help};
+
+my $inhibit_dump = 0;
+
+my @stack = ();
+
+my @reserved = qw( acos asin atan atan2 clear cos deg depth drop dropn pick
+                   dup exp help hex Hex hms HMS int ln log octal Octal
+                   ofmt rad rand sin sqrt srand srandx sumn swap tan vars );
+my %reserved = map { $_ => 1 } @reserved;
+
+my %variables = (
+    pi => abs atan2(0, -1),
+    e  => exp 1,
+    phi => (sqrt(5) + 1) / 2,
+    Ki => 2**10, K => 1e3,
+    Mi => 2**20, M => 1e6,
+    Gi => 2**30, G => 1e9,
+    Ti => 2**40, T => 1e12,
+    Pi => 2**50, P => 1e15,
+    Ei => 2**60, E => 1e18,
+    Zi => 2**70, Z => 1e21,
+    Yi => 2**80, Y => 1e24,
+    hundred           => 1e2,
+    thousand          => 1e3,
+    million           => 1e6,
+    billion           => 1e9,
+    trillion          => 1e12,
+    quadrillion       => 1e15,
+    quintillion       => 1e18,
+    sextillion        => 1e21,
+    septillion        => 1e24,
+    octillion         => 1e27,
+    nonillion         => 1e30,
+    decillion         => 1e33,
+    undecillion       => 1e36,
+    duodecillion      => 1e39,
+    tredecillion      => 1e42,
+    quattuordecillion => 1e45,
+    quindecillion     => 1e48,
+    sexdecillion      => 1e51,
+    septendecillion   => 1e54,
+    octodecillion     => 1e57,
+    novemdecillion    => 1e60,
+    vigintillion      => 1e63,
+);
+my $degrees_to_radians = $variables{pi} / 180.0;
+my $ofmt = '%.16g';
+
+if (@ARGV) {
+    evaluate_line(join ' ', @ARGV);
+}
+else {
+    if ($opt{readline} and init_ReadLine()) {
+        while ( defined ($_ = eval q($term->readline(''))) ) {
+            evaluate_line($_);
+        }
+    }
+    else {
+        while (<>) {
+            chomp;
+            evaluate_line($_);
+        }
+    }
+}
+
+# ----------------------------------------------------------------------
+
+sub dump_stack {
+    my($base) = @_;
+    my $i;
+    my $format;
+
+    if (scalar @stack == 0) {
+        print "  <empty stack>\n";
+        return;
+    }
+
+    if ($base eq 'HMS' or $base eq 'Comma') {
+        $format = "%3d: %s\n";
+    }
+    else {
+        $format = "%3d: $ofmt\n" if $base == 10;
+        $format = "%3d: 0x%x\n"  if $base == 16;
+        $format = "%3d: 0%o\n"   if $base ==  8;
+    }
+
+    for ($i = $#stack; $i >= 0; $i --) {
+        # printf("%3d: %s\n", $i, $stack[$i]);
+        # print "ref[$i] = \"", ref $stack[$i], "\"\n";
+        if (ref $stack[$i] eq 'Math::BigInt') {
+            printf "%3d: ", $i;
+            print "I: $stack[$i]\n";
+        }
+        elsif (ref $stack[$i] eq 'Math::BigFloat') {
+            printf "%3d: ", $i;
+            print "B: $stack[$i]\n";
+        }
+        elsif (ref $stack[$i] eq 'SCALAR') {
+            printf "%3d: \"%s\"\n", $i, ${$stack[$i]};
+        }
+        elsif ($base eq 'HMS') {
+            printf $format, $i, to_hms($stack[$i]);
+        }
+        elsif ($base eq 'Comma') {
+            printf $format, $i, add_commas($stack[$i]);
+        }
+        else {
+            printf $format, $i, $stack[$i];
+        }
+    }
+    $inhibit_dump = 1;
+}
+
+sub show_vars {
+    foreach my $name (sort keys %variables) {
+        printf "%-12s = $ofmt\n", $name, $variables{$name};
+    }
+}
+
+sub is_numeric {
+    my($arg) = @_;
+    return 1 if ref $arg eq 'Math::BigFloat';
+    return 0 if ref $arg;
+    my $warning = undef;
+    {
+        local $SIG{'__WARN__'} = sub { $warning = $_[0] };
+        my $tmp = $arg + 0;
+    }
+    if (defined $warning) {
+        if ($warning =~ /numeric/) {
+            return 0; # non-numeric
+        }
+        else {
+            warn $warning; # some other warning (?)
+            return 0;
+        }
+    }
+    else {
+        return 1; # numeric
+    }
+}
+
+sub is_hms {
+    my($word) = @_;
+    return $word =~ /^(\d+:)+\d+$/;
+}
+
+sub from_hms {
+    my($word) = @_;
+    my @fields;
+    my $result = 0;
+
+    @fields = split /:/, $word;
+
+    foreach my $field (@fields) {
+        $result = $result * 60 + $field;
+    }
+    return $result;
+}
+
+sub to_hms {
+    my($word) = @_;
+    if (int($word) != $word) {
+        return "to_hms not yet implemented for fractional values";
+    }
+    my $sign = '';
+    if ($word == 0) {
+        return "00";
+    }
+    if ($word < 0) {
+        $sign = '-';
+        $word = -$word;
+    }
+    my @digits = ();
+    while ($word != 0) {
+        unshift @digits, sprintf("%02d", $word % 60);
+        $word = int($word / 60);
+    }
+    return $sign . join(':', @digits);
+}
+
+sub add_commas {
+    my($word) = @_;
+    $word = sprintf $ofmt, $word;
+    return $word if $word =~ /[eE]/;
+    my ($sign, $integer, $dot, $after) = ($word =~ /^([-+]?)(\d+)(\.?)(.*)$/);
+    return $word if $integer eq '';
+
+    $integer = reverse $integer;
+    $integer =~ s/(...)/$&,/g;
+    $integer =~ s/,$//;
+    $integer = reverse $integer;
+
+    return "$sign$integer$dot$after";
+}
+
+sub is_hex {
+    my($word) = @_;
+    return $word =~ /^0x[\da-f]+$/i;
+}
+
+sub is_binary {
+    my($word) = @_;
+    return $word =~ /^0[bB][01]+$/;
+}
+
+sub help {
+    print <<'EOF';
+    <number>          : Push a number on the stack
+    <num>:<num>...    : Push a number in HH:MM::SS format
+    I:<number>        : Push a BigInt on the stack
+    B:<number>        : Push a BigFloat on the stack
+    <num>_<unit>      : num * unit, where <unit> can be any variable name
+    +, -, *, /, %, ** : arithmetic operators
+    --                : negate
+    //                : reciprocal
+    %%                : / and %
+    & | ^ ~ << >>     : logical operators
+    sumn              : sum of top tos stack elements
+    dup               : duplicate top of stack (tos)
+    drop              : drop tos
+    dropn             : drop tos+1 items from stack
+    pick              : Nth stack element; "1 pick" is equivalent to "dup"
+    depth             : stack depth
+    clear             : clear stack
+    swap              : swap top two stack elements
+    sin, cos, tan, asin, acos, atan :
+                        trig functions (radians)
+    atan2             : atan(y/x)
+    deg               : convert degrees->radians
+    rad               : convert radians->degrees
+    exp               : e**x
+    ln,  loge         : log base e
+    log, log10        : log base 10
+    lg,  log2         : log base 2
+    int               : integer part (truncate towards 0)
+    srand             : set random seed
+    srandx            : set random seed to specified value
+    rand              : random number
+    sqrt              : square root
+    vars              : show all variables
+    <name>=           : assign variable
+    ofmt=             : show output format
+    ofmt=<fmt>        : set output format
+    .                 : display tos
+    hex               : display tos in hex
+    octal             : display tos in octal
+    hms               : display tos in H:M:S format
+    comma             : display tos with commas, e.g., "12,345,678.901234"
+    ,                 : dump stack
+    Hex               : dump stack in hex
+    Octal             : dump stack in octal
+    HMS               : dump stack in H:M:S format
+    Comma             : dump stack with commas
+    \                 : inhibit stack dump
+    : ...             : Evaluate Perl expression (one line only)
+    (...)             : Evaluate Perl expression (no whitespace)
+EOF
+#   print "    ...          : continue (used on command line)"
+}
+
+sub check {
+    my($word, $count) = @_;
+    if (scalar @stack >= $count) {
+        return 1;
+    }
+    else {
+        warn "$word error: too few arguments\n";
+        return 0;
+    }
+}
+
+sub check_numeric {
+    my($word, $count) = @_;
+    if (scalar @stack >= $count) {
+        for (my $i = 0; $i < $count; $i ++) {
+            if (not is_numeric($stack[$i])) {
+                my $arg = $stack[$i];
+                if (ref $arg eq 'SCALAR') {
+                    $arg = $$arg;
+                }
+                warn "$word error: \"$arg\" is non-numeric\n";
+                return 0;
+            }
+        }
+        return 1;
+    }
+    else {
+        warn "$word error: too few arguments\n";
+        return 0;
+    }
+}
+
+sub evaluate {
+    my($word) = @_;
+    my $tmp;
+    my $tmp2;
+
+    debug("DEBUG: evaluate \"$word\"\n");
+
+    if ($word eq 'dup') {
+        check($word, 1) and unshift @stack, $stack[0];
+    }
+
+    elsif ($word eq 'drop') {
+        check($word, 1) and shift @stack;
+    }
+
+    elsif ($word eq 'pick') {
+        check_numeric($word, 1) and do {
+            my $n = shift @stack;
+            if ($n >= 0 and $n <= $#stack) {
+                unshift @stack, $stack[$n];
+            }
+            else {
+                warn "$word error: Argument is out of range\n";
+                # restore argument
+                unshift @stack, $n;
+            }
+        }
+    }
+
+    elsif ($word eq 'dropn') {
+        check_numeric($word, 1) and do {
+            my $n = shift @stack;
+            if ($n >= 0 and $n <= scalar @stack) {
+                shift @stack for 1 .. $n;
+            }
+            else {
+                warn "$word error: Argument is out of range\n";
+                # restore argument
+                unshift @stack, $n;
+            }
+        };
+    }
+
+    elsif ($word eq 'sumn') {
+        check_numeric($word, 1) and do {
+            my $n = shift @stack;
+            if ($n >= 0 and $n <= scalar @stack) {
+                if (check_numeric($word, $n)) {
+                    my $sum = 0;
+                    for (my $i = 0; $i < $n; $i ++) {
+                        $sum += shift @stack;
+                    }
+                    unshift @stack, $sum;
+                }
+                else {
+                    warn "$word error: Non-numeric stack element\=n";
+                    # restore argument
+                    unshift @stack, $n;
+                }
+            }
+        };
+    }
+
+    elsif ($word eq 'clear') {
+        $#stack = 0;
+    }
+
+    elsif ($word eq 'depth') {
+        unshift @stack, $#stack;
+    }
+
+    elsif ($word eq 'swap') {
+        check($word, 2) and do {
+            ($stack[0], $stack[1]) = ($stack[1], $stack[0]);
+        };
+    }
+
+    elsif ($word eq '+') {
+        check_numeric($word, 2) and do {
+            $stack[1] += $stack[0];
+            shift @stack;
+        };
+    }
+
+    elsif ($word eq '-') {
+        check_numeric($word, 2) and do {
+            $stack[1] -= $stack[0];
+            shift @stack;
+        };
+    }
+
+    elsif ($word eq '*') {
+        check_numeric($word, 2) and do {
+            $stack[1] *= $stack[0];
+            shift @stack;
+        };
+    }
+
+    elsif ($word eq '/') {
+        check_numeric($word, 2) and do {
+            $stack[1] /= $stack[0];
+            shift @stack;
+        };
+    }
+
+    elsif ($word eq '%') {
+        check_numeric($word, 2) and do {
+            $stack[1] %= $stack[0];
+            shift @stack;
+        };
+    }
+
+    elsif ($word eq '**') {
+        check_numeric($word, 2) and do {
+            $stack[1] **= $stack[0];
+            shift @stack;
+        };
+    }
+
+    elsif ($word eq '--') {
+        check_numeric($word, 1) and do {
+            $stack[0] = - $stack[0];
+        }
+    }
+
+    elsif ($word eq '//') {
+        check_numeric($word, 1) and do {
+            $stack[0] = 1.0 / $stack[0];
+        }
+    }
+
+    elsif ($word eq '%%') {
+        check_numeric($word, 2) and do {
+            my($y, $x) = ($stack[1], $stack[0]);
+            $stack[1] = int($x / $y);
+            $stack[0] = $x % $y;
+        }
+    }
+
+    #
+    # For logical operators, add 0 to each operand to ensure they
+    # operate on numbers, not strings.
+    #
+
+    elsif ($word eq '&') {
+        check_numeric($word, 2) and do {
+            my($x, $y) = (\$stack[0], \$stack[1]);
+            $$y = (0 + $$y) & (0 + $x);
+            shift @stack;
+        }
+    }
+
+    elsif ($word eq '|') {
+        check_numeric($word, 2) and do {
+            my($y, $x) = (shift @stack, shift @stack);
+            unshift @stack, (0 + $x) | (0 + $y);
+        }
+    }
+
+    elsif ($word eq '^') {
+        check_numeric($word, 2) and do {
+            my($y, $x) = (shift @stack, shift @stack);
+            unshift @stack, (0 + $x) ^ (0 + $y);
+        }
+    }
+
+    elsif ($word eq '~') {
+        check_numeric($word, 1) and $stack[0] = ~ (0 + $stack[0]);
+    }
+
+    elsif ($word eq '<<') {
+        check_numeric($word, 2) and do {
+            $stack[1] <<= $stack[0];
+            shift @stack;
+        }
+    }
+
+    elsif ($word eq '>>') {
+        check_numeric($word, 2) and do {
+            $stack[1] >>= $stack[0];
+            shift @stack;
+        }
+    }
+
+    elsif ($word eq 'sin') {
+        check_numeric($word, 1) and $stack[0] = sin $stack[0];
+    }
+
+    elsif ($word eq 'cos') {
+        check_numeric($word, 1) and $stack[0] = cos $stack[0];
+    }
+
+    elsif ($word eq 'tan') {
+        check_numeric($word, 1) and do {
+            $stack[0] = sin($stack[0]) / cos($stack[0]);
+        };
+    }
+
+    elsif ($word eq 'asin') {
+        check_numeric($word, 1) and do {
+            $stack[0] = atan2($stack[0], sqrt(1 - $stack[0]**2));
+        };
+    }
+
+    elsif ($word eq 'acos') {
+        check_numeric($word, 1) and do {
+            $stack[0] = atan2(sqrt(1 - $stack[0]**2), $stack[0]);
+        };
+    }
+
+    elsif ($word eq 'atan') {
+        check_numeric($word, 1) and do {
+            $stack[0] = atan2($stack[0], 1.0);
+        };
+    }
+
+    elsif ($word eq 'atan2') {
+        check_numeric($word, 2) and do {
+            $stack[1] = atan2($stack[0], $stack[1]);
+            shift @stack;
+        };
+    }
+
+    elsif ($word eq 'deg') {
+        check_numeric($word, 1) and
+            $stack[0] *= $degrees_to_radians;
+    }
+
+    elsif ($word eq 'rad') {
+        check_numeric($word, 1) and
+            $stack[0] /= $degrees_to_radians;
+    }
+
+    elsif ($word eq 'exp') {
+        check_numeric($word, 1) and $stack[0] = exp $stack[0]
+    }
+
+    elsif ($word eq 'ln' or $word eq 'loge') {
+        check_numeric($word, 1) and $stack[0] = log $stack[0]
+    }
+
+    elsif ($word eq 'log' or $word eq 'log10') {
+        check_numeric($word, 1) and $stack[0] = log($stack[0]) / log(10.0);
+    }
+
+    elsif ($word eq 'lg' or $word eq 'log2') {
+        check_numeric($word, 1) and $stack[0] = log($stack[0]) / log(2.0);
+    }
+
+    elsif ($word eq 'int') {
+        check_numeric($word, 1) and $stack[0] = int($stack[0]);
+    }
+
+    elsif ($word eq 'srandx') {
+        check_numeric($word, 1) and srand shift @stack;
+    }
+
+    elsif ($word eq 'srand') {
+        srand(time^$$);
+    }
+
+    elsif ($word eq 'rand') {
+        unshift @stack, rand;
+    }
+
+    elsif ($word eq 'randx') {
+        check_numeric($word, 1) and $stack[0] = rand($stack[0]);
+    }
+
+    elsif ($word eq 'sqrt') {
+        check_numeric($word, 1) and $stack[0] = sqrt($stack[0]);
+    }
+
+    elsif ($word eq '!') {
+        check_numeric($word, 1) and $stack[0] = factorial($stack[0]);
+    }
+
+    elsif ($word eq 'vars') {
+        show_vars();
+    }
+
+    elsif ( $word =~ /^ofmt=$/ ) {
+        print qq("output format = "$ofmt"\n);
+    }
+
+    elsif ( $word =~ /^ofmt=(.*)$/ ) {
+        $ofmt = $1;
+    }
+
+    elsif ($word =~ /^([a-zA-Z_]\w*)=$/) {
+        my($var_name) = $1;
+        if (defined $reserved{$var_name}) {
+            print "= error: reserved name\n";
+        } else {
+            check($word, 1) and $variables{$var_name} = shift @stack;
+        }
+    }
+
+    elsif ($word =~ /^\((.*)\)$/) {
+        my $result = eval $1;
+        unshift @stack, $result;
+    }
+
+    elsif (defined $variables{$word}) {
+        unshift @stack, $variables{$word};
+    }
+
+    elsif ($word eq '?' or $word eq 'help') {
+        help();
+        $inhibit_dump = 1;
+    }
+
+    elsif ($word eq 'man') {
+        Pod::Usage::pod2usage(-verbose => 2, -exitvalue => 'NOEXIT');
+        $inhibit_dump = 1;
+    }
+
+    elsif ($word eq '.') {
+        check($word, 1) and do {
+            printf "$ofmt\n", shift @stack;
+            $inhibit_dump = 1;
+        };
+    }
+
+    elsif ($word eq 'hex') {
+        check_numeric($word, 1) and do {
+            printf "0x%x\n", int $stack[0];
+            $inhibit_dump = 1;
+        };
+    }
+
+    elsif ($word eq 'octal') {
+        check_numeric($word, 1) and do {
+            #
+            # Workaround for mysterious bug, drops '0' and newline
+            #
+            # print "0", sprintf("%o", int(pop(@stack))), "\n";
+            # Commented out workaround; no longer needed
+            printf "0%o\n", int $stack[0];
+            $inhibit_dump = 1;
+        };
+    }
+
+    elsif ($word eq 'hms') {
+        check_numeric($word, 1) and do {
+            print to_hms($stack[0]), "\n";
+            $inhibit_dump = 1;
+        };
+    }
+
+    elsif ($word eq 'comma') {
+        check_numeric($word, 1) and do {
+            print add_commas($stack[0]), "\n";
+            $inhibit_dump = 1;
+        };
+    }
+
+    elsif ($word eq ',') {
+        dump_stack(10);
+    }
+
+    elsif ($word eq 'Hex') {
+        dump_stack(16);
+    }
+
+    elsif ($word eq 'Octal') {
+        dump_stack(8);
+    }
+
+    elsif ($word eq 'HMS') {
+        dump_stack('HMS');
+    }
+
+    elsif ($word eq 'Comma') {
+        dump_stack('Comma');
+    }
+
+#   else if (word == "...") {
+#       Continue = 1
+#   }
+
+    elsif ($word eq '\\') {
+        $inhibit_dump = 1;
+    }
+
+    elsif ($Have_BigInt and
+           de_comma($word) =~ /^[Ii]:\s*(.*)$/ and
+           is_numeric($tmp = de_comma($1)))
+    {
+        unshift @stack, eval 'Math::BigInt->new($tmp)';
+        # print ">>> pushed BigInt $stack[0]\n";
+    }
+
+    elsif ($Have_BigFloat and
+           de_comma($word) =~ /^[Bb]:\s*(.*)$/ and
+           is_numeric($tmp = de_comma($1)))
+    {
+        unshift @stack, eval 'Math::BigFloat->new($tmp)';
+    }
+
+    elsif (is_numeric($tmp = de_comma($word))) {
+        unshift @stack, $tmp;
+    }
+
+    elsif (($tmp, $tmp2) = split_units($word), defined $tmp2) {
+        unshift @stack, $tmp * $variables{$tmp2};
+    }
+
+    elsif (is_hms($word)) {
+        unshift @stack, from_hms($word);
+    }
+
+    elsif (is_hex($word)) {
+        unshift @stack, hex $word;
+    }
+
+    elsif (is_binary($word)) {
+        unshift @stack, eval $word;
+    }
+
+    else {
+        # warn "error: unrecognized word $word\n";
+        unshift @stack, \$word;
+    }
+
+    if (ref $stack[0] eq 'Math::BigInt') {
+        $stack[0] = eval 'new Math::BigFloat $stack[0]';
+    }
+}
+
+sub evaluate_string {
+    my($eval_string) = @_;
+    my $result;
+    my $warning = undef;
+
+    debug("DEBUG: \$eval_string = \"$eval_string\"\n");
+    {
+        local $SIG{'__WARN__'} = sub { $warning = $_[0] };
+        {
+            no strict;
+            $result = eval $eval_string;
+        }
+        debug("DEBUG: \$result  = ",  image($result),  "\n");
+        debug("DEBUG: \$\@       = ", image($@),       "\n");
+        debug("DEBUG: \$warning = ",  image($warning), "\n");
+        if (defined $warning) {
+            $warning =~ s/ at .*$//;
+        }
+        if (defined $@) {
+            $@ =~ s/ at .*$//;
+        }
+    }
+    if (defined $result) {
+        if (defined $warning) {
+            warn "Warning: $warning\n";
+        }
+        if (is_numeric($result)) {
+            unshift @stack, $result;
+        }
+        else {
+            # warn "Result = ", image($result), " is non-numeric\n";
+            unshift @stack, \$result;
+        }
+    }
+    else {
+        if (defined $warning) {
+            warn "Warning: $warning\n";
+        }
+        if (defined $@) {
+            warn "Error: $@\n";
+        }
+    }
+}
+
+sub evaluate_line {
+    my($line) = @_;
+    my $last_arg;
+    my $is_eval;
+
+    debug("DEBUG: evaluate_line \"$line\"\n");
+    $inhibit_dump = 0;
+
+    $line =~ s/^\s*//;
+    $line =~ s/\s*$//;
+    if ($line =~ /^:\s*(.*)$/) {
+        $is_eval = 1;
+        evaluate_string($1);
+    }
+    else {
+        $is_eval = 0;
+        foreach my $arg (split /\s+/, $line) {
+            $last_arg = $arg;
+            debug("DEBUG: calling evaluate \"$arg\"\n");
+            evaluate($arg);
+        }
+    }
+    if ($is_eval or (defined $last_arg and
+                     $last_arg ne "," and
+                     not $inhibit_dump)) {
+        dump_stack(10);
+    }
+}
+
+sub factorial {
+    my($x) = @_;
+    if ($x != int $x) {
+        warn "Factorial requires an integer argument\n";
+        return $x;
+    }
+    elsif ($x < 0) {
+        warn "Factorial requires a non-negative argument\n";
+        return $x;
+    }
+    else {
+        my $result = 1;
+        if (ref $x eq 'Math::BigFloat') {
+            $result = eval 'Math::BigFloat->new($result)';
+        }
+        for (my $i = 2; $i <= $x; $i ++) {
+            $result *= $i;
+        }
+        return $result;
+    }
+}
+
+sub debug {
+    my(@args) = @_;
+    print @args if $opt{debugging};
+}
+
+sub image {
+    my($result) = @_;
+    if (defined $result) {
+        $result =~ s/\n/\\n/g;
+        return "\"$result\"";
+    }
+    else {
+        return "undef";
+    }
+}
+
+sub de_comma {
+    my($s) = @_;
+    $s =~ s/,//g;
+    return $s;
+}
+
+sub split_units {
+    my($s) = @_;
+    my($num, $unit) = ($s =~ /^([^_]+)_([^_]+)$/);
+    if (defined $unit and is_numeric($num) and defined $variables{$unit})
+    {
+        return ($num, $unit);
+    }
+    else {
+        return ();
+    }
+}
+
+sub init_ReadLine {
+    our $initialized;
+    if (not $initialized) {
+        if ($Have_Term_ReadLine) {
+            eval q($term = new Term::ReadLine 'calc');
+            return 1;
+        }
+        else {
+            warn "Unable to load Perl::ReadLine\n";
+            return 0;
+        }
+    }
+}
+
+########################################################################
+
+__END__
+
+=head1 NAME
+
+calc - Text-mode RPN calculator
+
+=head1 SYNOPSIS
+
+calc [options]
+
+ Options:
+    -help   Show short usage message
+    -help1  Show medium usage message
+    -help2  Show long usage message
+    -man    Show long usage message (invokes pager)
+
+    -[no]readline Use Perl::ReadLine for input (default if available)
+    -debugging    Debugging (developer option)
+
+=head1 DESCRIPTION
+
+B<calc> is a text-mode RPN calculator
+
+Operands and commands may be entered as text or as command-line arguments.
+Multiple command may be entered on a line.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-help>
+
+Show short usage message
+
+=item B<-help1>
+
+Show medium usage message
+
+=item B<-help2>
+
+Show long usage message
+
+=item B<-man>
+
+Show long usage message using B<perldoc>, invokes pager
+
+=item B<-[no]readline>
+
+Use C<Perl::ReadLine> for input (enabled by default if available)
+
+=item B<-debugging>
+
+Enable debugging (developer option)
+
+=back
+
+=head1 COMMANDS AND OPERANDS
+
+=over 4
+
+=item B<?, help>
+
+Show help message
+
+=item B<man>
+
+Show man page (like C<calc -man>)
+
+=item B<number>
+
+Push a number onto the stack
+
+The number may be integer (decimal or hexadecimal) or floating-point.
+
+=item B<num:num:...>
+
+Push a number in HH:MM:SS format (base 60)
+
+=item B<I:number>
+
+Push a BigInt on the stack
+
+=item B<B:number>
+
+Push a BigFloat on the stack
+
+=item B<E<lt>numE<gt>_E<lt>unitE<gt>>
+
+num * unit, where <unit> can be any variable name
+
+Anything not recognized as a number or command is pushed onto the
+stack as a string.
+
+=item B<+, -, *, /, %, **>
+
+Arithmetic operators
+
+=item B<-->
+
+Negate
+
+=item B<//>
+
+Reciprocal
+
+=item B<%%>
+
+Push quotient and remainder
+
+=item B<& | ^ ~ E<lt>E<lt> E<gt>E<gt>>
+
+Bitwise operators
+
+=item B<sumn>
+
+Sum of top B<TOS> stack elements
+
+For example B<10 20 30 3 sumn> yields B<30>
+
+=item B<dup>
+
+Duplicate TOS (top of stack)
+
+=item B<drop>
+
+Drop TOS
+
+=item B<dropn>
+
+Drop B<TOS+1> items from stack
+
+=item B<pick>
+
+Nth stack element; B<1 pick> is equivalent to <dup>
+
+=item B<depth>
+
+Push stack depth
+
+=item B<clear>
+
+Clear stack; equivalent to B<depth dropn>
+
+=item B<swap>
+
+Swap top two stack elements
+
+=item B<sin, cos, tan, asin, acos, atan>
+
+Trigonometric functions (in radians)
+
+=item B<atan2>
+
+B<atan(y/x)>
+
+=item B<deg>
+
+Convert degrees to radians
+
+=item B<rad>
+
+Convert radians to degrees
+
+=item B<exp>
+
+B<e**x>
+
+=item B<ln, loge>
+
+log base B<e>
+
+=item B<log, log10>
+
+log base 10
+
+=item B<lg, log2>
+
+log base 2
+
+=item B<int>
+
+Integer part (truncate towards 0)
+
+=item B<srand>
+
+Set random seed
+
+=item B<srandx>
+
+Set random seed to specified value
+
+=item B<rand>
+
+Random number between 0.0 and 1.0
+
+=item B<sqrt>
+
+Square root
+
+=item B<vars>
+
+Show all variables
+
+=item B<E<lt>nameE<gt>=>
+
+Assign variable
+
+For example B<42 answer=> assigns the value B<42> to the variable B<answer>
+
+=item B<ofmt=>
+
+Show output format (default is C<"%.16g">)
+
+=item B<ofmt=E<lt>fmtE<gt>>
+
+Set output format
+
+=item B<.> (dot)
+
+Display TOS (top of stack)
+
+=item B<hex>
+
+Display TOS in hexadecimal
+
+=item B<octal>
+
+Display TOS in octal
+
+=item B<hms>
+
+Display TOS in H:M:S format (base 60) (currently limited to integers)
+
+=item B<comma>
+
+Display TOS with commas, e.g., C<"12,345,678.901234">
+
+=item <,> (comma character)
+
+Dump stack
+
+=item B<Hex>
+
+Dump stack in hexadecimal
+
+=item B<Octal>
+
+Dump stack in octal
+
+=item B<HMS>
+
+dump stack in H:M:S format (base 60)
+
+=item B<Comma>
+
+Dump stack with commas
+
+=item B<\>
+
+Inhibit stack dump
+
+=item B<: ...>
+
+Evaluate Perl expression (one line only)
+
+=item B<(...)>
+
+Evaluate Perl expression (no whitespace)
+
+=back
+
+=head1 PREDEFINED VARIABLES
+
+=over 4
+
+=item B<pi>
+
+3.141592653589793
+
+=item B<e>
+
+2.718281828459045 (Euler's constant)
+
+=item B<phi>
+
+1.618033988749895 (golden ratio)
+
+=item B<K>, B<M>, B<G>, B<T>, B<P>, B<E>, B<Z>, B<Y>
+
+Metric prefixes (decimal), 1000, 1000000, ...
+
+kilo, mega, giga, tera, peta, exa, zetta, yotta
+
+=item B<Ki>, B<Mi>, B<Gi>, B<Ti>, B<Pi>, B<Ei>, B<Zi>, B<Yi>
+
+Metric prefixes (binary), 1024, 1048576, ...
+
+kibi, mebi, gibi, tebi, pebi, exbi, zebi, yobi
+
+=item B<hundred>
+
+100
+
+=item B<thousand>, B<million>, B<billion>, B<trillion>, B<quadrillion>, B<quintillion>, B<sextillion>, B<septillion>, B<octillion>, B<nonillion>, B<decillion>, B<undecillion>, B<duodecillion>, B<tredecillion>, B<quattuordecillion>, B<quindecillion>, B<sexdecillion>, B<septendecillion>, B<octodecillion>, B<novemdecillion>, B<vigintillion>
+
+Powers of 1000
+
+=back
+
+=head1 SOURCE
+
+L<https://github.com/Keith-S-Thompson/calc>
+
+=head1 AUTHOR
+
+Keith Thompson <Keith.S.Thompson@gmail.com>
+
+=cut
