@@ -293,6 +293,10 @@ Multiple command may be entered on a line.
 
     Powers of 1000
 
+# SOURCE
+
+[https://github.com/Keith-S-Thompson/calc](https://github.com/Keith-S-Thompson/calc)
+
 # AUTHOR
 
 Keith Thompson <Keith.S.Thompson@gmail.com>
