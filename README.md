@@ -12,5 +12,8 @@ generated from `calc` (see `Makefile`), but are included in the
 git repo.
 
 `calc` uses the experimental `signatures` feature, introduced in
-Perl 5.20.  It's not difficult to back out the use of signatures,
-and I'll probably provide a script to do that automatically.
+Perl 5.20.  The included `nosig` script, invoked via `make nosig`,
+creates a version of `calc` that does not use signatures, for use on
+systems with older versions of Perl.
+
+`make` with no arguments creates the documentation files and `calc_nosig`.

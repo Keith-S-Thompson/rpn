@@ -1,0 +1,41 @@
+#!/usr/bin/perl
+
+# nosig: Translate Perl code that uses signatures to Perl code that doesn't.
+
+# Signatures were introduced in Perl 5.20
+# This script is not intended to be general-purpose.
+# ("Only perl can parse Perl")
+# This version handles the "calc" script.
+
+# Header lines:
+#     use feature 'signatures';
+#     no warnings 'experimental::signatures';
+# Example function definition:
+#     sub func($arg, $another_arg) { ... }
+# specifies that func takes exactly two scalar arguments.
+#     sub another_func(@args) { ... }
+# takes arbitrary arguments.  Note that this differs from the
+# non-signature version in that @args is a copy of the argument list.
+
+use strict;
+use warnings;
+
+while (<>) {
+    if (/^use feature 'signatures';$/ or
+        /^no warnings 'experimental::signatures';$/)
+    {
+        print "# $_";
+    }
+    else {
+        my ($name, $args) = /^sub (\w+)\(([^)]*)\) \{$/;
+        if (defined $args) {
+            print "sub $name {\n";
+            if ($args ne '') {
+                print "    my($args) = \@_;\n";
+            }
+        }
+        else {
+            print;
+        }
+    }
+}
