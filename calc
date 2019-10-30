@@ -570,7 +570,7 @@ sub evaluate($word) {
 
     elsif ($word eq 'atan2') {
         check_numeric($word, 2) and do {
-            $stack[1] = atan2($stack[0], $stack[1]);
+            $stack[1] = atan2($stack[1], $stack[0]);
             shift @stack;
         };
     }
