@@ -76,7 +76,7 @@ my $inhibit_dump = 0;
 my @stack = ();
 
 my @reserved = qw( acos asin atan atan2 clear cos deg depth drop dropn pick
-                   dup exp help hex Hex hms HMS int ln log octal Octal
+                   dup exp frac help hex Hex hms HMS int ln log octal Octal
                    ofmt rad rand sin sqrt srand srandx sumn swap tan vars );
 my %reserved = map { $_ => 1 } @reserved;
 
@@ -93,27 +93,13 @@ my %variables = (
     Zi => 2**70, Z => 1e21,
     Yi => 2**80, Y => 1e24,
     hundred           => 1e2,
-    thousand          => 1e3,
-    million           => 1e6,
-    billion           => 1e9,
-    trillion          => 1e12,
-    quadrillion       => 1e15,
-    quintillion       => 1e18,
-    sextillion        => 1e21,
-    septillion        => 1e24,
-    octillion         => 1e27,
-    nonillion         => 1e30,
-    decillion         => 1e33,
-    undecillion       => 1e36,
-    duodecillion      => 1e39,
-    tredecillion      => 1e42,
-    quattuordecillion => 1e45,
-    quindecillion     => 1e48,
-    sexdecillion      => 1e51,
-    septendecillion   => 1e54,
-    octodecillion     => 1e57,
-    novemdecillion    => 1e60,
-    vigintillion      => 1e63,
+    thousand      => 1e3,  million        => 1e6,  billion           => 1e9,
+    trillion      => 1e12, quadrillion    => 1e15, quintillion       => 1e18,
+    sextillion    => 1e21, septillion     => 1e24, octillion         => 1e27,
+    nonillion     => 1e30, decillion      => 1e33, undecillion       => 1e36,
+    duodecillion  => 1e39, tredecillion   => 1e42, quattuordecillion => 1e45,
+    quindecillion => 1e48, sexdecillion   => 1e51, septendecillion   => 1e54,
+    octodecillion => 1e57, novemdecillion => 1e60, vigintillion      => 1e63,
 );
 my $degrees_to_radians = $variables{pi} / 180.0;
 my $ofmt = '%.16g';
@@ -306,6 +292,7 @@ sub help {
     log, log10        : log base 10
     lg,  log2         : log base 2
     int               : integer part (truncate towards 0)
+    frac              : fractional part
     srand             : set random seed
     srandx            : set random seed to specified value
     rand              : random number
@@ -427,11 +414,11 @@ sub evaluate {
     }
 
     elsif ($word eq 'clear') {
-        $#stack = 0;
+        $#stack = -1;
     }
 
     elsif ($word eq 'depth') {
-        unshift @stack, $#stack;
+        unshift @stack, scalar @stack;
     }
 
     elsif ($word eq 'swap') {
@@ -581,7 +568,7 @@ sub evaluate {
 
     elsif ($word eq 'atan2') {
         check_numeric($word, 2) and do {
-            $stack[1] = atan2($stack[0], $stack[1]);
+            $stack[1] = atan2($stack[1], $stack[0]);
             shift @stack;
         };
     }
@@ -614,6 +601,10 @@ sub evaluate {
 
     elsif ($word eq 'int') {
         check_numeric($word, 1) and $stack[0] = int($stack[0]);
+    }
+
+    elsif ($word eq 'frac') {
+        check_numeric($word, 1) and $stack[0] -= int($stack[0]);
     }
 
     elsif ($word eq 'srandx') {
@@ -1120,6 +1111,10 @@ log base 2
 =item B<int>
 
 Integer part (truncate towards 0)
+
+=item B<frac>
+
+Fractional part
 
 =item B<srand>
 

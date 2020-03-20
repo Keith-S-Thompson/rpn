@@ -173,6 +173,10 @@ Multiple command may be entered on a line.
 
     Integer part (truncate towards 0)
 
+- **frac**
+
+    Fractional part
+
 - **srand**
 
     Set random seed

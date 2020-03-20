@@ -76,7 +76,7 @@ my $inhibit_dump = 0;
 my @stack = ();
 
 my @reserved = qw( acos asin atan atan2 clear cos deg depth drop dropn pick
-                   dup exp help hex Hex hms HMS int ln log octal Octal
+                   dup exp frac help hex Hex hms HMS int ln log octal Octal
                    ofmt rad rand sin sqrt srand srandx sumn swap tan vars );
 my %reserved = map { $_ => 1 } @reserved;
 
@@ -284,6 +284,7 @@ sub help() {
     log, log10        : log base 10
     lg,  log2         : log base 2
     int               : integer part (truncate towards 0)
+    frac              : fractional part
     srand             : set random seed
     srandx            : set random seed to specified value
     rand              : random number
@@ -589,6 +590,10 @@ sub evaluate($word) {
 
     elsif ($word eq 'int') {
         check_numeric($word, 1) and $stack[0] = int($stack[0]);
+    }
+
+    elsif ($word eq 'frac') {
+        check_numeric($word, 1) and $stack[0] -= int($stack[0]);
     }
 
     elsif ($word eq 'srandx') {
@@ -1088,6 +1093,10 @@ log base 2
 =item B<int>
 
 Integer part (truncate towards 0)
+
+=item B<frac>
+
+Fractional part
 
 =item B<srand>
 
