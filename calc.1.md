@@ -193,6 +193,12 @@ Multiple command may be entered on a line.
 
     Square root
 
+- **hhmm**
+
+    Current time in minutes since midnight.
+
+    **hhmm hms** shows the time in human-readable form.
+
 - **vars**
 
     Show all variables

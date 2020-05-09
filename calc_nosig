@@ -631,6 +631,11 @@ sub evaluate {
         check_numeric($word, 1) and $stack[0] = factorial($stack[0]);
     }
 
+    elsif ($word eq 'hhmm') {
+        my ($ss, $mm, $hh) = localtime time;
+        unshift @stack, $mm + $hh*60;
+    }
+
     elsif ($word eq 'vars') {
         show_vars();
     }
@@ -1131,6 +1136,12 @@ Random number between 0.0 and 1.0
 =item B<sqrt>
 
 Square root
+
+=item B<hhmm>
+
+Current time in minutes since midnight.
+
+B<hhmm hms> shows the time in human-readable form.
 
 =item B<vars>
 
