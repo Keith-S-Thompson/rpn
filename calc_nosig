@@ -945,10 +945,8 @@ calc - Text-mode RPN calculator
 calc [options]
 
  Options:
-    -help   Show short usage message
-    -help1  Show medium usage message
-    -help2  Show long usage message
-    -man    Show long usage message (invokes pager)
+    -help|-help1|-help2  Show short|medium|long usage message
+    -man                 Show long usage message (invokes pager)
 
     -[no]readline Use Perl::ReadLine for input (default if available)
     -debugging    Debugging (developer option)
