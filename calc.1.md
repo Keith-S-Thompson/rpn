@@ -95,7 +95,7 @@ Multiple command may be entered on a line.
 
 - **%%**
 
-    Push quotient and remainder
+    Push quotient and remainder (integers only)
 
 - **& | ^ ~ << >>**
 

@@ -473,8 +473,8 @@ sub evaluate($word) {
     elsif ($word eq '%%') {
         check_numeric($word, 2) and do {
             my($y, $x) = ($stack[1], $stack[0]);
-            $stack[1] = int($x / $y);
-            $stack[0] = $x % $y;
+            $stack[1] = int($y / $x);
+            $stack[0] = $y % $x;
         }
     }
 
