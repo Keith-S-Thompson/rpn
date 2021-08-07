@@ -23,7 +23,8 @@
 # I can then define array operations, such as replacing a list
 # with the differences between its successive members:
 #     ( 10 12 17 20 ) --> ( 2 5 3 )
-# Hmm.  Look at Perl6 operators and consider stealing some of them.
+# Hmm.  Look at Perl6^H^H^H^H^H Raku operators and consider stealing
+# some of them.
 #
 # Implement to_hms for fractional values.
 #
@@ -33,6 +34,11 @@
 #
 # Construct help() output from the same source as pod2usage()
 # (or just make "help" and "?" invoke pod2usage())
+#
+# Add a hexadecimal mode to display values in hexadecimal.
+# hex enters hexadecimal mode, dec leaves it.
+#
+# Add a mode to use BitInt/BigFloat.
 
 use strict;
 use warnings;
@@ -485,23 +491,22 @@ sub evaluate($word) {
 
     elsif ($word eq '&') {
         check_numeric($word, 2) and do {
-            my($x, $y) = (\$stack[0], \$stack[1]);
-            $$y = (0 + $$y) & (0 + $x);
+            $stack[1] = (0 + $stack[1]) & (0 + $stack[0]);
             shift @stack;
         }
     }
 
     elsif ($word eq '|') {
         check_numeric($word, 2) and do {
-            my($y, $x) = (shift @stack, shift @stack);
-            unshift @stack, (0 + $x) | (0 + $y);
+            $stack[1] = (0 + $stack[1]) | (0 + $stack[0]);
+            shift @stack;
         }
     }
 
     elsif ($word eq '^') {
         check_numeric($word, 2) and do {
-            my($y, $x) = (shift @stack, shift @stack);
-            unshift @stack, (0 + $x) ^ (0 + $y);
+            $stack[1] = (0 + $stack[1]) ^ (0 + $stack[0]);
+            shift @stack;
         }
     }
 
@@ -511,14 +516,14 @@ sub evaluate($word) {
 
     elsif ($word eq '<<') {
         check_numeric($word, 2) and do {
-            $stack[1] <<= $stack[0];
+            $stack[1] = (0 + $stack[1]) << (0 + $stack[0]);
             shift @stack;
         }
     }
 
     elsif ($word eq '>>') {
         check_numeric($word, 2) and do {
-            $stack[1] >>= $stack[0];
+            $stack[1] = (0 + $stack[1]) >> (0 + $stack[0]);
             shift @stack;
         }
     }
