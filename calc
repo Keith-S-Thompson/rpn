@@ -35,9 +35,6 @@
 # Construct help() output from the same source as pod2usage()
 # (or just make "help" and "?" invoke pod2usage())
 #
-# Add a hexadecimal mode to display values in hexadecimal.
-# hex enters hexadecimal mode, dec leaves it.
-#
 # Add a mode to use BitInt/BigFloat.
 
 use strict;
@@ -69,6 +66,7 @@ Getopt::Long::GetOptions(
         help2!
         man!
         readline!
+        hexadecimal!
         debugging!
     )
 ) or Pod::Usage::pod2usage(-verbose => 0, -exitvalue => 2);
@@ -77,6 +75,7 @@ Pod::Usage::pod2usage(-verbose => 2, -exitvalue => 0, -perldocopt, '-T -t') if $
 Pod::Usage::pod2usage(-verbose => 1, -exitvalue => 0) if $opt{help1};
 Pod::Usage::pod2usage(-verbose => 0, -exitvalue => 0) if $opt{help};
 
+my $hex_mode = $opt{hexadecimal};
 my $inhibit_dump = 0;
 
 my @stack = ();
@@ -308,6 +307,8 @@ sub help() {
     Hex               : dump stack in hex
     Octal             : dump stack in octal
     HMS               : dump stack in H:M:S format
+    hexmode           : change default display to hexadecimal
+    decmode           : change default display to decimal
     Comma             : dump stack with commas
     \                 : inhibit stack dump
     : ...             : Evaluate Perl expression (one line only)
@@ -672,7 +673,12 @@ sub evaluate($word) {
 
     elsif ($word eq '.') {
         check($word, 1) and do {
-            printf "$ofmt\n", shift @stack;
+            if ($hex_mode) {
+                printf "0x%x\n", int $stack[0];
+            }
+            else {
+                printf "$ofmt\n", shift @stack;
+            }
             $inhibit_dump = 1;
         };
     }
@@ -711,7 +717,7 @@ sub evaluate($word) {
     }
 
     elsif ($word eq ',') {
-        dump_stack(10);
+        dump_stack($hex_mode ? 16 : 10);
     }
 
     elsif ($word eq 'Hex') {
@@ -728,6 +734,14 @@ sub evaluate($word) {
 
     elsif ($word eq 'Comma') {
         dump_stack('Comma');
+    }
+
+    elsif ($word eq 'hexmode') {
+        $hex_mode = 1;
+    }
+
+    elsif ($word eq 'decmode') {
+        $hex_mode = 0;
     }
 
 #   else if (word == "...") {
@@ -850,7 +864,7 @@ sub evaluate_line($line) {
     if ($is_eval or (defined $last_arg and
                      $last_arg ne "," and
                      not $inhibit_dump)) {
-        dump_stack(10);
+        dump_stack($hex_mode ? 16 : 10);
     }
 }
 
