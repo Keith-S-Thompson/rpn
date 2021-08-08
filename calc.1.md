@@ -42,6 +42,12 @@ Multiple command may be entered on a line.
 
     Use `Perl::ReadLine` for input (enabled by default if available)
 
+- **-hexadecimal**
+
+    Use hexadecimal mode.  Hexadecimal input still requires "0x"
+    prefix, but output shows hexadecimal integers.  See also **hexmode**
+    and **decmode** commands.  Can be abbreviated to **-hex**.
+
 - **-debugging**
 
     Enable debugging (developer option)
@@ -95,7 +101,7 @@ Multiple command may be entered on a line.
 
 - **%%**
 
-    Push quotient and remainder (integers only)
+    Push quotient and remainder
 
 - **& | ^ ~ << >>**
 
@@ -230,6 +236,15 @@ Multiple command may be entered on a line.
 - **hms**
 
     Display TOS in H:M:S format (base 60) (currently limited to integers)
+
+- **hexmode**
+
+        Enter hexadecimal mode.  Numbers are shown as hexadecimal integers.
+        "0x" prefix is still required for hexadecimal input.
+
+- **decmode**
+
+        Enter decimal mode (the default).
 
 - **comma**
 

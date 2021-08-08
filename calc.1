@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "CALC 1"
-.TH CALC 1 "2021-06-15" "perl v5.30.0" "User Contributed Perl Documentation"
+.TH CALC 1 "2021-08-08" "perl v5.30.0" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -175,6 +175,11 @@ Show long usage message using \fBperldoc\fR, invokes pager
 .IP "\fB\-[no]readline\fR" 4
 .IX Item "-[no]readline"
 Use \f(CW\*(C`Perl::ReadLine\*(C'\fR for input (enabled by default if available)
+.IP "\fB\-hexadecimal\fR" 4
+.IX Item "-hexadecimal"
+Use hexadecimal mode.  Hexadecimal input still requires \*(L"0x\*(R"
+prefix, but output shows hexadecimal integers.  See also \fBhexmode\fR
+and \fBdecmode\fR commands.  Can be abbreviated to \fB\-hex\fR.
 .IP "\fB\-debugging\fR" 4
 .IX Item "-debugging"
 Enable debugging (developer option)
@@ -320,6 +325,17 @@ Display \s-1TOS\s0 in octal
 .IP "\fBhms\fR" 4
 .IX Item "hms"
 Display \s-1TOS\s0 in H:M:S format (base 60) (currently limited to integers)
+.IP "\fBhexmode\fR" 4
+.IX Item "hexmode"
+.Vb 2
+\&    Enter hexadecimal mode.  Numbers are shown as hexadecimal integers.
+\&    "0x" prefix is still required for hexadecimal input.
+.Ve
+.IP "\fBdecmode\fR" 4
+.IX Item "decmode"
+.Vb 1
+\&    Enter decimal mode (the default).
+.Ve
 .IP "\fBcomma\fR" 4
 .IX Item "comma"
 Display \s-1TOS\s0 with commas, e.g., \f(CW"12,345,678.901234"\fR

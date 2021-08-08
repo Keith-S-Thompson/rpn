@@ -983,6 +983,12 @@ Show long usage message using B<perldoc>, invokes pager
 
 Use C<Perl::ReadLine> for input (enabled by default if available)
 
+=item B<-hexadecimal>
+
+Use hexadecimal mode.  Hexadecimal input still requires "0x"
+prefix, but output shows hexadecimal integers.  See also B<hexmode>
+and B<decmode> commands.  Can be abbreviated to B<-hex>.
+
 =item B<-debugging>
 
 Enable debugging (developer option)
@@ -1175,6 +1181,15 @@ Display TOS in octal
 =item B<hms>
 
 Display TOS in H:M:S format (base 60) (currently limited to integers)
+
+=item B<hexmode>
+
+    Enter hexadecimal mode.  Numbers are shown as hexadecimal integers.
+    "0x" prefix is still required for hexadecimal input.
+
+=item B<decmode>
+
+    Enter decimal mode (the default).
 
 =item B<comma>
 

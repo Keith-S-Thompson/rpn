@@ -23,7 +23,8 @@
 # I can then define array operations, such as replacing a list
 # with the differences between its successive members:
 #     ( 10 12 17 20 ) --> ( 2 5 3 )
-# Hmm.  Look at Perl6 operators and consider stealing some of them.
+# Hmm.  Look at Perl6^H^H^H^H^H Raku operators and consider stealing
+# some of them.
 #
 # Implement to_hms for fractional values.
 #
@@ -33,6 +34,8 @@
 #
 # Construct help() output from the same source as pod2usage()
 # (or just make "help" and "?" invoke pod2usage())
+#
+# Add a mode to use BitInt/BigFloat.
 
 use strict;
 use warnings;
@@ -63,6 +66,7 @@ Getopt::Long::GetOptions(
         help2!
         man!
         readline!
+        hexadecimal!
         debugging!
     )
 ) or Pod::Usage::pod2usage(-verbose => 0, -exitvalue => 2);
@@ -71,6 +75,7 @@ Pod::Usage::pod2usage(-verbose => 2, -exitvalue => 0, -perldocopt, '-T -t') if $
 Pod::Usage::pod2usage(-verbose => 1, -exitvalue => 0) if $opt{help1};
 Pod::Usage::pod2usage(-verbose => 0, -exitvalue => 0) if $opt{help};
 
+my $hex_mode = $opt{hexadecimal};
 my $inhibit_dump = 0;
 
 my @stack = ();
@@ -310,6 +315,8 @@ sub help {
     Hex               : dump stack in hex
     Octal             : dump stack in octal
     HMS               : dump stack in H:M:S format
+    hexmode           : change default display to hexadecimal
+    decmode           : change default display to decimal
     Comma             : dump stack with commas
     \                 : inhibit stack dump
     : ...             : Evaluate Perl expression (one line only)
@@ -484,8 +491,8 @@ sub evaluate {
     elsif ($word eq '%%') {
         check_numeric($word, 2) and do {
             my($y, $x) = ($stack[1], $stack[0]);
-            $stack[1] = int($x / $y);
-            $stack[0] = $x % $y;
+            $stack[1] = int($y / $x);
+            $stack[0] = $y % $x;
         }
     }
 
@@ -496,23 +503,22 @@ sub evaluate {
 
     elsif ($word eq '&') {
         check_numeric($word, 2) and do {
-            my($x, $y) = (\$stack[0], \$stack[1]);
-            $$y = (0 + $$y) & (0 + $x);
+            $stack[1] = (0 + $stack[1]) & (0 + $stack[0]);
             shift @stack;
         }
     }
 
     elsif ($word eq '|') {
         check_numeric($word, 2) and do {
-            my($y, $x) = (shift @stack, shift @stack);
-            unshift @stack, (0 + $x) | (0 + $y);
+            $stack[1] = (0 + $stack[1]) | (0 + $stack[0]);
+            shift @stack;
         }
     }
 
     elsif ($word eq '^') {
         check_numeric($word, 2) and do {
-            my($y, $x) = (shift @stack, shift @stack);
-            unshift @stack, (0 + $x) ^ (0 + $y);
+            $stack[1] = (0 + $stack[1]) ^ (0 + $stack[0]);
+            shift @stack;
         }
     }
 
@@ -522,14 +528,14 @@ sub evaluate {
 
     elsif ($word eq '<<') {
         check_numeric($word, 2) and do {
-            $stack[1] <<= $stack[0];
+            $stack[1] = (0 + $stack[1]) << (0 + $stack[0]);
             shift @stack;
         }
     }
 
     elsif ($word eq '>>') {
         check_numeric($word, 2) and do {
-            $stack[1] >>= $stack[0];
+            $stack[1] = (0 + $stack[1]) >> (0 + $stack[0]);
             shift @stack;
         }
     }
@@ -678,7 +684,12 @@ sub evaluate {
 
     elsif ($word eq '.') {
         check($word, 1) and do {
-            printf "$ofmt\n", shift @stack;
+            if ($hex_mode) {
+                printf "0x%x\n", int $stack[0];
+            }
+            else {
+                printf "$ofmt\n", shift @stack;
+            }
             $inhibit_dump = 1;
         };
     }
@@ -717,7 +728,7 @@ sub evaluate {
     }
 
     elsif ($word eq ',') {
-        dump_stack(10);
+        dump_stack($hex_mode ? 16 : 10);
     }
 
     elsif ($word eq 'Hex') {
@@ -734,6 +745,14 @@ sub evaluate {
 
     elsif ($word eq 'Comma') {
         dump_stack('Comma');
+    }
+
+    elsif ($word eq 'hexmode') {
+        $hex_mode = 1;
+    }
+
+    elsif ($word eq 'decmode') {
+        $hex_mode = 0;
     }
 
 #   else if (word == "...") {
@@ -858,7 +877,7 @@ sub evaluate_line {
     if ($is_eval or (defined $last_arg and
                      $last_arg ne "," and
                      not $inhibit_dump)) {
-        dump_stack(10);
+        dump_stack($hex_mode ? 16 : 10);
     }
 }
 
@@ -981,6 +1000,12 @@ Show long usage message using B<perldoc>, invokes pager
 =item B<-[no]readline>
 
 Use C<Perl::ReadLine> for input (enabled by default if available)
+
+=item B<-hexadecimal>
+
+Use hexadecimal mode.  Hexadecimal input still requires "0x"
+prefix, but output shows hexadecimal integers.  See also B<hexmode>
+and B<decmode> commands.  Can be abbreviated to B<-hex>.
 
 =item B<-debugging>
 
@@ -1174,6 +1199,15 @@ Display TOS in octal
 =item B<hms>
 
 Display TOS in H:M:S format (base 60) (currently limited to integers)
+
+=item B<hexmode>
+
+    Enter hexadecimal mode.  Numbers are shown as hexadecimal integers.
+    "0x" prefix is still required for hexadecimal input.
+
+=item B<decmode>
+
+    Enter decimal mode (the default).
 
 =item B<comma>
 
