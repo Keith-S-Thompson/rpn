@@ -1,5 +1,9 @@
 # calc - A text-mode RPN calculator
 
+NOTE: Since "calc" is a very common name, I'm considering changing the
+name of this program, probably to "calq".  (The 'q' has no intended
+meaning beyond making the spelling reasonably unique.)
+
 `calc` is implemented in Perl.  It maintains an unbounded stack of
 values and supports various operations on those values.
 
