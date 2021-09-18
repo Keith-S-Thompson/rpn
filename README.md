@@ -3,12 +3,12 @@
 **NOTE**: Since "calc" is a very common name, I've changed name of this
 program from "calc" to "calq".  (The 'q' has no intended meaning
 beyond making the spelling reasonably unique.)  If you're seeing this
-via the GitHub link
-[https://github.com/Keith-S-Thompson/calc](https://github.com/Keith-S-Thompson/calc)
-please update to
-[https://github.com/Keith-S-Thompson/calq](https://github.com/Keith-S-Thompson/calq).
-I *think* the old URL will redirect to the new one.  If it doesn't,
-I'll replace the old `calc` repo with a message pointing to `calq`.
+via the GitHub link  
+[https://github.com/Keith-S-Thompson/calc](https://github.com/Keith-S-Thompson/calc)  
+please update to  
+[https://github.com/Keith-S-Thompson/calq](https://github.com/Keith-S-Thompson/calq).  
+The old URL will redirect to the new one, both on the web interface
+and for cloning.
 
 `calq` is implemented in Perl.  It maintains an unbounded stack of
 values and supports various operations on those values.
