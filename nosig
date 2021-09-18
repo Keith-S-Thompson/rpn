@@ -5,7 +5,7 @@
 # Signatures were introduced in Perl 5.20
 # This script is not intended to be general-purpose.
 # ("Only perl can parse Perl")
-# This version handles the "calc" script.
+# This version handles the "calq" script.
 
 # Header lines:
 #     use feature 'signatures';

@@ -923,7 +923,7 @@ sub init_ReadLine() {
     our $initialized;
     if (not $initialized) {
         if ($Have_Term_ReadLine) {
-            eval q($term = new Term::ReadLine 'calc');
+            eval q($term = new Term::ReadLine 'calq');
             return 1;
         }
         else {
@@ -939,11 +939,11 @@ sub init_ReadLine() {
 
 =head1 NAME
 
-calc - Text-mode RPN calculator
+calq - Text-mode RPN calculator
 
 =head1 SYNOPSIS
 
-calc [options]
+calq [options]
 
  Options:
     -help|-help1|-help2  Show short|medium|long usage message
@@ -954,7 +954,7 @@ calc [options]
 
 =head1 DESCRIPTION
 
-B<calc> is a text-mode RPN calculator
+B<calq> (formerly called B<calc>) is a text-mode RPN calculator
 
 Operands and commands may be entered as text or as command-line arguments.
 Multiple command may be entered on a line.
@@ -1005,7 +1005,7 @@ Show help message
 
 =item B<man>
 
-Show man page (like C<calc -man>)
+Show man page (like C<calq -man>)
 
 =item B<number>
 
@@ -1269,7 +1269,7 @@ Powers of 1000
 
 =head1 SOURCE
 
-L<https://github.com/Keith-S-Thompson/calc>
+L<https://github.com/Keith-S-Thompson/calq>
 
 =head1 AUTHOR
 

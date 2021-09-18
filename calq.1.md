@@ -1,10 +1,10 @@
 # NAME
 
-calc - Text-mode RPN calculator
+calq - Text-mode RPN calculator
 
 # SYNOPSIS
 
-calc \[options\]
+calq \[options\]
 
     Options:
        -help|-help1|-help2  Show short|medium|long usage message
@@ -15,7 +15,7 @@ calc \[options\]
 
 # DESCRIPTION
 
-**calc** is a text-mode RPN calculator
+**calq** (formerly called **calc**) is a text-mode RPN calculator
 
 Operands and commands may be entered as text or as command-line arguments.
 Multiple command may be entered on a line.
@@ -60,7 +60,7 @@ Multiple command may be entered on a line.
 
 - **man**
 
-    Show man page (like `calc -man`)
+    Show man page (like `calq -man`)
 
 - **number**
 
@@ -318,7 +318,7 @@ Multiple command may be entered on a line.
 
 # SOURCE
 
-[https://github.com/Keith-S-Thompson/calc](https://github.com/Keith-S-Thompson/calc)
+[https://github.com/Keith-S-Thompson/calq](https://github.com/Keith-S-Thompson/calq)
 
 # AUTHOR
 
