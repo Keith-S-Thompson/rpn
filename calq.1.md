@@ -239,12 +239,12 @@ Multiple command may be entered on a line.
 
 - **hexmode**
 
-        Enter hexadecimal mode.  Numbers are shown as hexadecimal integers.
-        "0x" prefix is still required for hexadecimal input.
+    Enter hexadecimal mode.  Numbers are shown as hexadecimal integers.
+    "0x" prefix is still required for hexadecimal input.
 
 - **decmode**
 
-        Enter decimal mode (the default).
+    Enter decimal mode (the default).
 
 - **comma**
 
