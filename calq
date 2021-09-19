@@ -1184,12 +1184,12 @@ Display TOS in H:M:S format (base 60) (currently limited to integers)
 
 =item B<hexmode>
 
-    Enter hexadecimal mode.  Numbers are shown as hexadecimal integers.
-    "0x" prefix is still required for hexadecimal input.
+Enter hexadecimal mode.  Numbers are shown as hexadecimal integers.
+"0x" prefix is still required for hexadecimal input.
 
 =item B<decmode>
 
-    Enter decimal mode (the default).
+Enter decimal mode (the default).
 
 =item B<comma>
 

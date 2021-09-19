@@ -14,7 +14,7 @@ and for cloning.
 values and supports various operations on those values.
 
 Run `calq -man` or `calq man`, or `man calq` (if the man page is
-installed), or the `man` command from within calq, to see the manual.
+installed), or the `man` command from within `calq`, to see the manual.
 If you're viewing this on GitHub, see `calq.1.md`.
 
 Documentation files `calq.1` and `calq.1.md` are automatically
