@@ -40,8 +40,8 @@
 use strict;
 use warnings;
 
-# use feature 'signatures';
-# no warnings 'experimental::signatures';
+use feature 'signatures';
+no warnings 'experimental::signatures';
 
 use Getopt::Long ();
 use Pod::Usage ();
@@ -128,8 +128,7 @@ else {
 
 # ----------------------------------------------------------------------
 
-sub dump_stack {
-    my($base) = @_;
+sub dump_stack($base) {
     my $i;
     my $format;
 
@@ -174,14 +173,13 @@ sub dump_stack {
     $inhibit_dump = 1;
 }
 
-sub show_vars {
+sub show_vars() {
     foreach my $name (sort keys %variables) {
         printf "%-12s = $ofmt\n", $name, $variables{$name};
     }
 }
 
-sub is_numeric {
-    my($arg) = @_;
+sub is_numeric($arg) {
     return 1 if ref $arg eq 'Math::BigFloat';
     return 0 if ref $arg;
     my $warning = undef;
@@ -203,13 +201,11 @@ sub is_numeric {
     }
 }
 
-sub is_hms {
-    my($word) = @_;
+sub is_hms($word) {
     return $word =~ /^(\d+:)+\d+$/;
 }
 
-sub from_hms {
-    my($word) = @_;
+sub from_hms($word) {
     my @fields;
     my $result = 0;
 
@@ -221,8 +217,7 @@ sub from_hms {
     return $result;
 }
 
-sub to_hms {
-    my($word) = @_;
+sub to_hms($word) {
     if (int($word) != $word) {
         return "to_hms not yet implemented for fractional values";
     }
@@ -242,8 +237,7 @@ sub to_hms {
     return $sign . join(':', @digits);
 }
 
-sub add_commas {
-    my($word) = @_;
+sub add_commas($word) {
     $word = sprintf $ofmt, $word;
     return $word if $word =~ /[eE]/;
     my ($sign, $integer, $dot, $after) = ($word =~ /^([-+]?)(\d+)(\.?)(.*)$/);
@@ -257,17 +251,15 @@ sub add_commas {
     return "$sign$integer$dot$after";
 }
 
-sub is_hex {
-    my($word) = @_;
+sub is_hex($word) {
     return $word =~ /^0x[\da-f]+$/i;
 }
 
-sub is_binary {
-    my($word) = @_;
+sub is_binary($word) {
     return $word =~ /^0[bB][01]+$/;
 }
 
-sub help {
+sub help() {
     print <<'EOF';
     <number>          : Push a number on the stack
     <num>:<num>...    : Push a number in HH:MM::SS format
@@ -325,8 +317,7 @@ EOF
 #   print "    ...          : continue (used on command line)"
 }
 
-sub check {
-    my($word, $count) = @_;
+sub check($word, $count) {
     if (scalar @stack >= $count) {
         return 1;
     }
@@ -336,8 +327,7 @@ sub check {
     }
 }
 
-sub check_numeric {
-    my($word, $count) = @_;
+sub check_numeric($word, $count) {
     if (scalar @stack >= $count) {
         for (my $i = 0; $i < $count; $i ++) {
             if (not is_numeric($stack[$i])) {
@@ -357,8 +347,7 @@ sub check_numeric {
     }
 }
 
-sub evaluate {
-    my($word) = @_;
+sub evaluate($word) {
     my $tmp;
     my $tmp2;
 
@@ -808,8 +797,7 @@ sub evaluate {
     }
 }
 
-sub evaluate_string {
-    my($eval_string) = @_;
+sub evaluate_string($eval_string) {
     my $result;
     my $warning = undef;
 
@@ -852,8 +840,7 @@ sub evaluate_string {
     }
 }
 
-sub evaluate_line {
-    my($line) = @_;
+sub evaluate_line($line) {
     my $last_arg;
     my $is_eval;
 
@@ -881,8 +868,7 @@ sub evaluate_line {
     }
 }
 
-sub factorial {
-    my($x) = @_;
+sub factorial($x) {
     if ($x != int $x) {
         warn "Factorial requires an integer argument\n";
         return $x;
@@ -903,13 +889,11 @@ sub factorial {
     }
 }
 
-sub debug {
-    my(@args) = @_;
+sub debug(@args) {
     print @args if $opt{debugging};
 }
 
-sub image {
-    my($result) = @_;
+sub image($result) {
     if (defined $result) {
         $result =~ s/\n/\\n/g;
         return "\"$result\"";
@@ -919,14 +903,12 @@ sub image {
     }
 }
 
-sub de_comma {
-    my($s) = @_;
+sub de_comma($s) {
     $s =~ s/,//g;
     return $s;
 }
 
-sub split_units {
-    my($s) = @_;
+sub split_units($s) {
     my($num, $unit) = ($s =~ /^([^_]+)_([^_]+)$/);
     if (defined $unit and is_numeric($num) and defined $variables{$unit})
     {
@@ -937,11 +919,11 @@ sub split_units {
     }
 }
 
-sub init_ReadLine {
+sub init_ReadLine() {
     our $initialized;
     if (not $initialized) {
         if ($Have_Term_ReadLine) {
-            eval q($term = new Term::ReadLine 'calq');
+            eval q($term = new Term::ReadLine 'rpn');
             return 1;
         }
         else {
@@ -957,11 +939,11 @@ sub init_ReadLine {
 
 =head1 NAME
 
-calq - Text-mode RPN calculator
+rpn - Text-mode RPN calculator
 
 =head1 SYNOPSIS
 
-calq [options]
+rpn [options]
 
  Options:
     -help|-help1|-help2  Show short|medium|long usage message
@@ -972,7 +954,7 @@ calq [options]
 
 =head1 DESCRIPTION
 
-B<calq> (formerly called B<calc>) is a text-mode RPN calculator
+B<rpn> (formerly called B<calc>) is a text-mode RPN calculator
 
 Operands and commands may be entered as text or as command-line arguments.
 Multiple command may be entered on a line.
@@ -1023,7 +1005,7 @@ Show help message
 
 =item B<man>
 
-Show man page (like C<calq -man>)
+Show man page (like C<rpn -man>)
 
 =item B<number>
 
@@ -1287,7 +1269,7 @@ Powers of 1000
 
 =head1 SOURCE
 
-L<https://github.com/Keith-S-Thompson/calq>
+L<https://github.com/Keith-S-Thompson/rpn>
 
 =head1 AUTHOR
 

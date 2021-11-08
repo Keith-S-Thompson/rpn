@@ -1,18 +1,18 @@
 all:		doc nosig
 
-doc:		calq.1 calq.1.md
+doc:		rpn.1 rpn.1.md
 
-nosig:		calq_nosig
+nosig:		rpn_nosig
 
-calq.1:		calq
+rpn.1:		rpn
 		pod2man $< > $@
 
-calq.1.md:	calq
+rpn.1.md:	rpn
 		pod2markdown $< > $@
 
-calq_nosig:	calq
+rpn_nosig:	rpn
 		perl nosig $< > $@
 		chmod +x $@
 
 clean:
-		@rm -f calq.1 calq.1.md calq_nosig
+		@rm -f rpn.1 rpn.1.md rpn_nosig
