@@ -858,7 +858,10 @@ sub evaluate_line($line) {
         foreach my $arg (split /\s+/, $line) {
             $last_arg = $arg;
             debug("DEBUG: calling evaluate \"$arg\"\n");
-            evaluate($arg);
+            eval { evaluate($arg) };
+            if ($@ ne "") {
+                print STDERR ">>> $@";
+            }
         }
     }
     if ($is_eval or (defined $last_arg and
