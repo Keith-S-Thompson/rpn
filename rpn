@@ -56,9 +56,7 @@ eval 'use Term::ReadLine';
 my($Have_Term_ReadLine) = ( $@ eq '' );
 my($term);
 
-my %opt = (
-    readline => 1
-);
+my %opt;
 Getopt::Long::GetOptions(
     \%opt,
     qw( help|hel|he|h!
@@ -113,7 +111,9 @@ if (@ARGV) {
     evaluate_line(join ' ', @ARGV);
 }
 else {
-    if ($opt{readline} and init_ReadLine()) {
+    my $explicit_readline = $opt{readline};
+    $opt{readline} = 1 if not defined $opt{readline};
+    if ($opt{readline} and init_ReadLine($explicit_readline)) {
         while ( defined ($_ = eval q($term->readline(''))) ) {
             evaluate_line($_);
         }
@@ -922,17 +922,27 @@ sub split_units($s) {
     }
 }
 
-sub init_ReadLine() {
-    our $initialized;
-    if (not $initialized) {
-        if ($Have_Term_ReadLine) {
-            eval q($term = new Term::ReadLine 'rpn');
+sub init_ReadLine($explicit) {
+    if ($Have_Term_ReadLine) {
+        eval q($term = new Term::ReadLine 'rpn');
+        if ($explicit) {
+            # You asked for it
             return 1;
         }
         else {
-            warn "Unable to load Perl::ReadLine\n";
-            return 0;
+            # The stub implementation is not useful.
+            # Don't use it unless the user asked for it.
+            if ($term->ReadLine eq 'Term::ReadLine::Stub') {
+                return 0;
+            }
+            else {
+                return 1;
+            }
         }
+    }
+    else {
+        warn "Unable to load Perl::ReadLine\n" if $explicit;
+        return 0;
     }
 }
 
