@@ -1274,7 +1274,7 @@ milli, micro, nano, pico, femto, atto, zepto, yocto, ronto, quecto
 
 Metric prefixes (binary), 1024, 1048576, ...
 
-kibi, mebi, gibi, tebi, pebi, exbi, zebi, yobi
+kibi, mebi, gibi, tebi, pebi, exbi, zebi, yobi, robi(?), quebi(?)
 
 =item B<hundred>
 

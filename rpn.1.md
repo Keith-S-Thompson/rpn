@@ -310,7 +310,7 @@ Multiple command may be entered on a line.
 
     Metric prefixes (binary), 1024, 1048576, ...
 
-    kibi, mebi, gibi, tebi, pebi, exbi, zebi, yobi
+    kibi, mebi, gibi, tebi, pebi, exbi, zebi, yobi, robi(?), quebi(?)
 
 - **hundred**
 
