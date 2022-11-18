@@ -296,13 +296,17 @@ Multiple command may be entered on a line.
 
     1.618033988749895 (golden ratio)
 
-- **K**, **M**, **G**, **T**, **P**, **E**, **Z**, **Y**
+- **k**, **M**, **G**, **T**, **P**, **E**, **Z**, **Y**, **R**, **Q**
 
     Metric prefixes (decimal), 1000, 1000000, ...
 
-    kilo, mega, giga, tera, peta, exa, zetta, yotta
+- **m**, **mu**, **n**, **p**, **f**, **a**, **z**, **y**, **r**, **q**
 
-- **Ki**, **Mi**, **Gi**, **Ti**, **Pi**, **Ei**, **Zi**, **Yi**
+    Metric prefixes (decimal), 10^-3, 10^-6, ...
+
+    milli, micro, nano, pico, femto, atto, zepto, yocto, ronto, quecto
+
+- **ki**, **Mi**, **Gi**, **Ti**, **Pi**, **Ei**, **Zi**, **Yi**, **Ri**, **Qi**
 
     Metric prefixes (binary), 1024, 1048576, ...
 
