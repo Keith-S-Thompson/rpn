@@ -1,15 +1,13 @@
 # rpn - A text-mode RPN calculator
 
-**NOTE**: Since "calc" is a very common name, I've changed name of this
-program from "calc" to "rpn".  If you're seeing this
-via the GitHub link
+**NOTE**: Since "calc" is a very common name, I've changed the name
+of this program from "calc" to "rpn".  If you're seeing this via the
+GitHub link
 [https://github.com/Keith-S-Thompson/calc](https://github.com/Keith-S-Thompson/calc)
 please update to  
 [https://github.com/Keith-S-Thompson/rpn](https://github.com/Keith-S-Thompson/rpn).
 The old URL will redirect to the new one, both on the web interface
 and for cloning.
-
-(I briefly changed the name from "calc" to "calq", but decided I didn't like it.)
 
 `rpn` is implemented in Perl.  It maintains an unbounded stack of
 values and supports various operations on those values.
