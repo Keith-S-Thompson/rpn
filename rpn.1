@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "RPN 1"
-.TH RPN 1 "2022-11-18" "perl v5.34.0" "User Contributed Perl Documentation"
+.TH RPN 1 "2023-07-13" "perl v5.34.0" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -147,7 +147,7 @@ rpn [options]
 .Vb 3
 \& Options:
 \&    \-help|\-help1|\-help2  Show short|medium|long usage message
-\&    \-man                 Show long usage message (invokes pager)
+\&    \-man                 Show man page (invokes pager)
 \&
 \&    \-[no]readline Use Perl::ReadLine for input (default if available)
 \&    \-debugging    Debugging (developer option)
@@ -160,18 +160,12 @@ Operands and commands may be entered as text or as command-line arguments.
 Multiple command may be entered on a line.
 .SH "OPTIONS"
 .IX Header "OPTIONS"
-.IP "\fB\-help\fR" 4
-.IX Item "-help"
-Show short usage message
-.IP "\fB\-help1\fR" 4
-.IX Item "-help1"
-Show medium usage message
-.IP "\fB\-help2\fR" 4
-.IX Item "-help2"
-Show long usage message
+.IP "\fB\-help\fR, \fB\-help1\fR, \fB\-help2\fR" 4
+.IX Item "-help, -help1, -help2"
+Show short, medium, or long usage message
 .IP "\fB\-man\fR" 4
 .IX Item "-man"
-Show long usage message using \fBperldoc\fR, invokes pager
+Show man page using \fBperldoc\fR, invokes pager
 .IP "\fB\-[no]readline\fR" 4
 .IX Item "-[no]readline"
 Use \f(CW\*(C`Perl::ReadLine\*(C'\fR for input (enabled by default if available)
@@ -207,7 +201,7 @@ Push a BigInt on the stack
 Push a BigFloat on the stack
 .IP "\fB<num>_<unit>\fR" 4
 .IX Item "<num>_<unit>"
-num * unit, where <unit> can be any variable name
+<num> * <unit>, where <unit> can be any variable name
 .Sp
 Anything not recognized as a number or command is pushed onto the
 stack as a string.
@@ -230,7 +224,7 @@ Bitwise operators
 .IX Item "sumn"
 Sum of top \fB\s-1TOS\s0\fR stack elements
 .Sp
-For example \fB10 20 30 3 sumn\fR yields \fB30\fR
+For example "\fB10 20 30 3 sumn\fR" yields \fB30\fR
 .IP "\fBdup\fR" 4
 .IX Item "dup"
 Duplicate \s-1TOS\s0 (top of stack)
@@ -242,7 +236,7 @@ Drop \s-1TOS\s0
 Drop \fB\s-1TOS+1\s0\fR items from stack
 .IP "\fBpick\fR" 4
 .IX Item "pick"
-Nth stack element; \fB1 pick\fR is equivalent to <dup>
+Nth stack element; "\fB1 pick\fR\*(L" is equivalent to \*(R"\fBdup\fR"
 .IP "\fBdepth\fR" 4
 .IX Item "depth"
 Push stack depth
@@ -284,21 +278,24 @@ Integer part (truncate towards 0)
 Fractional part
 .IP "\fBsrand\fR" 4
 .IX Item "srand"
-Set random seed
+Set arbitrary random seed
 .IP "\fBsrandx\fR" 4
 .IX Item "srandx"
 Set random seed to specified value
 .IP "\fBrand\fR" 4
 .IX Item "rand"
-Random number between 0.0 and 1.0
+Random number between 0.0 and 1.0 (0.0 <= result < 1.0)
+.Sp
+Implicitly calls \fBsrand\fR before first use if it hasn't been called
+explicitly.
 .IP "\fBsqrt\fR" 4
 .IX Item "sqrt"
 Square root
 .IP "\fBhhmm\fR" 4
 .IX Item "hhmm"
-Current time in minutes since midnight.
+Current time in minutes since midnight
 .Sp
-\&\fBhhmm hms\fR shows the time in human-readable form.
+\&\fBhhmm hms\fR shows the time in human-readable form
 .IP "\fBvars\fR" 4
 .IX Item "vars"
 Show all variables
@@ -306,7 +303,7 @@ Show all variables
 .IX Item "<name>="
 Assign variable
 .Sp
-For example \fB42 answer=\fR assigns the value \fB42\fR to the variable \fBanswer\fR
+For example "\fB42 answer=\fR" assigns the value \fB42\fR to the variable \fBanswer\fR
 .IP "\fBofmt=\fR" 4
 .IX Item "ofmt="
 Show output format (default is \f(CW"%.16g"\fR)
@@ -324,19 +321,19 @@ Display \s-1TOS\s0 in hexadecimal
 Display \s-1TOS\s0 in octal
 .IP "\fBhms\fR" 4
 .IX Item "hms"
-Display \s-1TOS\s0 in H:M:S format (base 60) (currently limited to integers)
+Display \s-1TOS\s0 in \s-1HH:MM:SS\s0 format (base 60) (currently limited to integers)
 .IP "\fBhexmode\fR" 4
 .IX Item "hexmode"
 Enter hexadecimal mode.  Numbers are shown as hexadecimal integers.
 \&\*(L"0x\*(R" prefix is still required for hexadecimal input.
 .IP "\fBdecmode\fR" 4
 .IX Item "decmode"
-Enter decimal mode (the default).
+Enter decimal mode (the default)
 .IP "\fBcomma\fR" 4
 .IX Item "comma"
 Display \s-1TOS\s0 with commas, e.g., \f(CW"12,345,678.901234"\fR
-.IP "<,> (comma character)" 4
-.IX Item "<,> (comma character)"
+.IP "\fB,\fR (comma character)" 4
+.IX Item ", (comma character)"
 Dump stack
 .IP "\fBHex\fR" 4
 .IX Item "Hex"
@@ -346,7 +343,7 @@ Dump stack in hexadecimal
 Dump stack in octal
 .IP "\fB\s-1HMS\s0\fR" 4
 .IX Item "HMS"
-dump stack in H:M:S format (base 60)
+Dump stack in \s-1HH:MM:SS\s0 format (base 60)
 .IP "\fBComma\fR" 4
 .IX Item "Comma"
 Dump stack with commas

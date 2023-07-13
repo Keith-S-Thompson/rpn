@@ -8,7 +8,7 @@ rpn \[options\]
 
     Options:
        -help|-help1|-help2  Show short|medium|long usage message
-       -man                 Show long usage message (invokes pager)
+       -man                 Show man page (invokes pager)
 
        -[no]readline Use Perl::ReadLine for input (default if available)
        -debugging    Debugging (developer option)
@@ -22,21 +22,13 @@ Multiple command may be entered on a line.
 
 # OPTIONS
 
-- **-help**
+- **-help**, **-help1**, **-help2**
 
-    Show short usage message
-
-- **-help1**
-
-    Show medium usage message
-
-- **-help2**
-
-    Show long usage message
+    Show short, medium, or long usage message
 
 - **-man**
 
-    Show long usage message using **perldoc**, invokes pager
+    Show man page using **perldoc**, invokes pager
 
 - **-\[no\]readline**
 
@@ -82,7 +74,7 @@ Multiple command may be entered on a line.
 
 - **&lt;num>\_&lt;unit>**
 
-    num \* unit, where &lt;unit> can be any variable name
+    &lt;num> \* &lt;unit>, where &lt;unit> can be any variable name
 
     Anything not recognized as a number or command is pushed onto the
     stack as a string.
@@ -111,7 +103,7 @@ Multiple command may be entered on a line.
 
     Sum of top **TOS** stack elements
 
-    For example **10 20 30 3 sumn** yields **30**
+    For example "**10 20 30 3 sumn**" yields **30**
 
 - **dup**
 
@@ -127,7 +119,7 @@ Multiple command may be entered on a line.
 
 - **pick**
 
-    Nth stack element; **1 pick** is equivalent to &lt;dup>
+    Nth stack element; "**1 pick**" is equivalent to "**dup**"
 
 - **depth**
 
@@ -183,7 +175,7 @@ Multiple command may be entered on a line.
 
 - **srand**
 
-    Set random seed
+    Set arbitrary random seed
 
 - **srandx**
 
@@ -191,7 +183,10 @@ Multiple command may be entered on a line.
 
 - **rand**
 
-    Random number between 0.0 and 1.0
+    Random number between 0.0 and 1.0 (0.0 <= result < 1.0)
+
+    Implicitly calls **srand** before first use if it hasn't been called
+    explicitly.
 
 - **sqrt**
 
@@ -199,9 +194,9 @@ Multiple command may be entered on a line.
 
 - **hhmm**
 
-    Current time in minutes since midnight.
+    Current time in minutes since midnight
 
-    **hhmm hms** shows the time in human-readable form.
+    **hhmm hms** shows the time in human-readable form
 
 - **vars**
 
@@ -211,7 +206,7 @@ Multiple command may be entered on a line.
 
     Assign variable
 
-    For example **42 answer=** assigns the value **42** to the variable **answer**
+    For example "**42 answer=**" assigns the value **42** to the variable **answer**
 
 - **ofmt=**
 
@@ -235,7 +230,7 @@ Multiple command may be entered on a line.
 
 - **hms**
 
-    Display TOS in H:M:S format (base 60) (currently limited to integers)
+    Display TOS in HH:MM:SS format (base 60) (currently limited to integers)
 
 - **hexmode**
 
@@ -244,13 +239,13 @@ Multiple command may be entered on a line.
 
 - **decmode**
 
-    Enter decimal mode (the default).
+    Enter decimal mode (the default)
 
 - **comma**
 
     Display TOS with commas, e.g., `"12,345,678.901234"`
 
-- <,> (comma character)
+- **,** (comma character)
 
     Dump stack
 
@@ -264,7 +259,7 @@ Multiple command may be entered on a line.
 
 - **HMS**
 
-    dump stack in H:M:S format (base 60)
+    Dump stack in HH:MM:SS format (base 60)
 
 - **Comma**
 
