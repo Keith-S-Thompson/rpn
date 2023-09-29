@@ -10,14 +10,29 @@ unary_op = {
     (float, "--"):   float.__neg__,
     (int, "1/"):     lambda x: 1 / x,
     (float, "1/"):   lambda x: 1.0 / x,
-    (int, "sqrt"):   math.sqrt,
-    (float, "sqrt"): math.sqrt,
-    (int, "sin"):   math.sin,
-    (float, "sin"): math.sin,
-    (int, "cos"):   math.cos,
-    (float, "cos"): math.cos,
-    (int, "tan"):   math.tan,
-    (float, "tan"): math.tan,
+
+    (int, "sqrt"):    math.sqrt,
+    (float, "sqrt"):  math.sqrt,
+    (int, "exp"):     math.exp,
+    (float, "exp"):   math.exp,
+    (int, "ln"):      math.log,
+    (float, "ln"):    math.log,
+    (int, "loge"):    math.log,
+    (float, "loge"):  math.log,
+    (int, "log"):     math.log10,
+    (float, "log"):   math.log10,
+    (int, "log10"):   math.log10,
+    (float, "log10"): math.log10,
+    (int, "log2"):    math.log2,
+    (float, "log2"):  math.log2,
+
+    (int, "sin"):    math.sin,
+    (float, "sin"):  math.sin,
+    (int, "cos"):    math.cos,
+    (float, "cos"):  math.cos,
+    (int, "tan"):    math.tan,
+    (float, "tan"):  math.tan,
+
     (int, "asin"):   math.asin,
     (float, "asin"): math.asin,
     (int, "acos"):   math.acos,
@@ -32,6 +47,7 @@ binary_op = {
     (int, int, "/"):  int.__truediv__,
     (int, int, "//"): int.__floordiv__,
     (int, int, "**"): int.__pow__,
+    (int, int, "atan2"):  math.atan2,
 
     (float, float, "+"):  float.__add__,
     (float, float, "-"):  float.__sub__,
@@ -39,6 +55,7 @@ binary_op = {
     (float, float, "/"):  float.__truediv__,
     (float, float, "//"): float.__floordiv__,
     (float, float, "**"): float.__pow__,
+    (float, float, "atan2"):  math.atan2,
 
     (int, float, "+"):  float.__add__,
     (int, float, "-"):  float.__sub__,
@@ -46,6 +63,7 @@ binary_op = {
     (int, float, "/"):  lambda x, y: x / y,
     (int, float, "//"): float.__floordiv__,
     (int, float, "**"): float.__pow__,
+    (int, float, "atan2"):  math.atan2,
 
     (float, int, "+"):  float.__add__,
     (float, int, "-"):  float.__sub__,
@@ -53,6 +71,7 @@ binary_op = {
     (int, float, "/"):  float.__truediv__,
     (float, int, "//"): float.__floordiv__,
     (float, int, "**"): lambda x, y: x ** y,
+    (float, int, "atan2"):  math.atan2,
 
     (str, str, "+"): str.__add__,
 }
@@ -83,6 +102,12 @@ def process_word(word):
         stack[1] = binary_op[type(stack[0]), type(stack[1]), word](stack[1], stack[0])
         del stack[0]
 
+    elif word == "dup":
+        if len(stack) == 0:
+            print(f"{word} error: requires 1 argument")
+        else:
+            stack.insert(0, stack[0])
+
     elif word == "drop":
         if len(stack) == 0:
             print(f"{word} error: requires 1 argument")
@@ -100,6 +125,12 @@ def process_word(word):
 
     elif word == "clear":
         stack = []
+
+    elif word == "pi":
+        stack.insert(0, 4.0 * math.atan2(1.0, 1.0))
+
+    elif word == "e":
+        stack.insert(0, math.exp(1.0))
 
     elif word == "int":
         if len(stack) < 1:
