@@ -3,6 +3,7 @@
 import sys
 import math
 import re
+import readline
 
 stack = []
 unary_op = {
@@ -25,6 +26,8 @@ unary_op = {
     (float, "log10"): math.log10,
     (int, "log2"):    math.log2,
     (float, "log2"):  math.log2,
+    (int, "lg"):      math.log2,
+    (float, "lg"):    math.log2,
 
     (int, "sin"):    math.sin,
     (float, "sin"):  math.sin,
@@ -177,8 +180,22 @@ def process_line(line):
         for word in line.split():
             process_word(word)
 
-
-for line in sys.stdin:
-    process_line(line)
+def show_stack():
+    global stack
     for i in reversed(range(len(stack))):
         print(f"{i:3}: {type_abbrev(type(stack[i]))}: {stack[i]}")
+
+
+if len(sys.argv) > 1:
+    for arg in sys.argv[1:]:
+        process_word(arg)
+    show_stack()
+else:
+    while True:
+        try:
+            line = input("> ")
+        except EOFError:
+            print("")
+            break
+        process_line(line)
+        show_stack()
