@@ -87,7 +87,7 @@ Multiple command may be entered on a line.
 
     Negate
 
-- **//**
+- **1/**
 
     Reciprocal
 

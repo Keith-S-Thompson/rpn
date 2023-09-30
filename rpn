@@ -270,7 +270,7 @@ sub help() {
     <num>_<unit>      : num * unit, where <unit> can be any variable name
     +, -, *, /, %, ** : arithmetic operators
     --                : negate
-    //                : reciprocal
+    1/                : reciprocal
     %%                : / and %
     & | ^ ~ << >>     : logical operators
     sumn              : sum of top tos stack elements
@@ -473,7 +473,7 @@ sub evaluate($word) {
         }
     }
 
-    elsif ($word eq '//') {
+    elsif ($word eq '1/') {
         check_numeric($word, 1) and do {
             $stack[0] = 1.0 / $stack[0];
         }
@@ -1047,7 +1047,7 @@ Arithmetic operators
 
 Negate
 
-=item B<//>
+=item B<1/>
 
 Reciprocal
 
