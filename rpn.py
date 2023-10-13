@@ -11,6 +11,7 @@ unary_op = {
     (float, "--"):   float.__neg__,
     (int, "1/"):     lambda x: 1 / x,
     (float, "1/"):   lambda x: 1.0 / x,
+    (int, "!"):      math.factorial,
 
     (int, "sqrt"):    math.sqrt,
     (float, "sqrt"):  math.sqrt,
@@ -133,7 +134,19 @@ def process_word(word):
         stack.insert(0, 4.0 * math.atan2(1.0, 1.0))
 
     elif word == "e":
-        stack.insert(0, math.exp(1.0))
+        stack.insert(0, math.e)
+
+    elif word == "pi":
+        stack.insert(0, math.pi)
+
+    elif word == "tau":
+        stack.insert(0, math.tau)
+
+    elif word == "inf":
+        stack.insert(0, math.inf)
+
+    elif word == "nan":
+        stack.insert(0, math.nan)
 
     elif word == "int":
         if len(stack) < 1:
