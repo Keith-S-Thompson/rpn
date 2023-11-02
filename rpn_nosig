@@ -140,28 +140,31 @@ sub dump_stack {
         return;
     }
 
+    my $index_width = length(scalar(@stack)+1);
+    my $index_format = "%-${index_width}d";
+
     if ($base eq 'HMS' or $base eq 'Comma') {
-        $format = "%3d: %s\n";
+        $format = "$index_format: %s\n";
     }
     else {
-        $format = "%3d: $ofmt\n" if $base == 10;
-        $format = "%3d: 0x%x\n"  if $base == 16;
-        $format = "%3d: 0%o\n"   if $base ==  8;
+        $format = "$index_format: $ofmt\n" if $base == 10;
+        $format = "$index_format: 0x%x\n"  if $base == 16;
+        $format = "$index_format: 0%o\n"   if $base ==  8;
     }
 
     for ($i = $#stack; $i >= 0; $i --) {
-        # printf("%3d: %s\n", $i, $stack[$i]);
+        # printf("$index_format: %s\n", $i, $stack[$i]);
         # print "ref[$i] = \"", ref $stack[$i], "\"\n";
         if (ref $stack[$i] eq 'Math::BigInt') {
-            printf "%3d: ", $i;
+            printf "$index_format: ", $i;
             print "I: $stack[$i]\n";
         }
         elsif (ref $stack[$i] eq 'Math::BigFloat') {
-            printf "%3d: ", $i;
+            printf "$index_format: ", $i;
             print "B: $stack[$i]\n";
         }
         elsif (ref $stack[$i] eq 'SCALAR') {
-            printf "%3d: \"%s\"\n", $i, ${$stack[$i]};
+            printf "$index_format: \"%s\"\n", $i, ${$stack[$i]};
         }
         elsif ($base eq 'HMS') {
             printf $format, $i, to_hms($stack[$i]);
