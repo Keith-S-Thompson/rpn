@@ -50,6 +50,7 @@ binary_op = {
     (int, int, "*"):  int.__mul__,
     (int, int, "/"):  int.__truediv__,
     (int, int, "//"): int.__floordiv__,
+    (int, int, "%"):  int.__mod__,
     (int, int, "**"): int.__pow__,
     (int, int, "atan2"):  math.atan2,
 
