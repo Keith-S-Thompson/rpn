@@ -131,9 +131,6 @@ def process_word(word):
     elif word == "clear":
         stack = []
 
-    elif word == "pi":
-        stack.insert(0, 4.0 * math.atan2(1.0, 1.0))
-
     elif word == "e":
         stack.insert(0, math.e)
 
