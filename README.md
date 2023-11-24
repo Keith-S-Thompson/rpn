@@ -29,3 +29,6 @@ You might need to adjust the `#!/usr/bin/perl` line for your system.
 
 `make` with no arguments creates the documentation files and
 `rpn_nosig`.
+
+`rpn.py` is an experimental re-implementation in Python.  It's a work
+in progress.
