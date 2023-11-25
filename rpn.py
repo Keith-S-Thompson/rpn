@@ -66,15 +66,15 @@ binary_op = {
     (int, float, "-"):  float.__sub__,
     (int, float, "*"):  float.__mul__,
     (int, float, "/"):  lambda x, y: x / y,
-    (int, float, "//"): float.__floordiv__,
+    (int, float, "//"): lambda x, y: x // y,
     (int, float, "**"): float.__pow__,
     (int, float, "atan2"):  math.atan2,
 
     (float, int, "+"):  float.__add__,
     (float, int, "-"):  float.__sub__,
     (float, int, "*"):  float.__mul__,
-    (int, float, "/"):  float.__truediv__,
-    (float, int, "//"): float.__floordiv__,
+    (float, int, "/"):  lambda x, y: x / y,
+    (float, int, "//"): lambda x, y: x // y,
     (float, int, "**"): lambda x, y: x ** y,
     (float, int, "atan2"):  math.atan2,
 
