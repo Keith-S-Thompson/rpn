@@ -31,4 +31,5 @@ You might need to adjust the `#!/usr/bin/perl` line for your system.
 `rpn_nosig`.
 
 `rpn.py` is an experimental re-implementation in Python.  It's a work
-in progress.
+in progress, and is known to be buggy (not necessarily giving wrong
+answers, just not handling some operations).
