@@ -52,6 +52,12 @@ my($Have_BigInt) = ( $@ eq '' );
 eval 'use Math::BigFloat';
 my($Have_BigFloat) = ( $@ eq '' );
 
+eval 'use Date::Parse';
+my($Have_Date_Parse) = ( $@ eq '' );
+
+eval 'use Time::Piece';
+my($Have_Time_Piece) = ( $@ eq '' );
+
 eval 'use Term::ReadLine';
 my($Have_Term_ReadLine) = ( $@ eq '' );
 my($term);
@@ -79,7 +85,7 @@ my $inhibit_dump = 0;
 my @stack = ();
 
 my @reserved = qw( acos asin atan atan2 clear cos deg depth drop dropn pick
-                   dup exp frac help hex Hex hms HMS int ln log octal Octal
+                   dup exp frac help hex Hex hms HMS ymd today int ln log octal Octal
                    ofmt rad rand sin sqrt srand srandx sumn swap tan vars );
 my %reserved = map { $_ => 1 } @reserved;
 
@@ -245,6 +251,32 @@ sub to_hms {
         $word = int($word / 60);
     }
     return $sign . join(':', @digits);
+}
+
+sub is_ymd {
+    my($word) = @_;
+    if ($Have_Time_Piece and $Have_Date_Parse) {
+        return $word =~ /^\d+-\d\d-\d\d$/;
+    }
+    else {
+        warn "Date arithmetic requires Time::Piece and Date::Parse\n";
+        return 0;
+    }
+}
+
+sub from_ymd {
+    my($word) = @_;
+    # $word is "YYYY-MM-DD", result is day number
+    my($year, $mon, $mday) = ($word =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/);
+    my $timestamp = Date::Parse::str2time($word, 'UTC');
+    return int($timestamp / 86400);
+}
+
+sub to_ymd {
+    my($word) = @_;
+    # $word is day number, result is string "YYYY-MM-DD"
+    my $timestamp = $word * 86400;
+    return Time::Piece::gmtime($word * 86400)->strftime("%F");
 }
 
 sub add_commas {
@@ -647,6 +679,13 @@ sub evaluate {
         unshift @stack, $mm + $hh*60;
     }
 
+    elsif ($word eq 'today') {
+        my $now = time;
+        my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+        my $yyyymmdd = sprintf("%04d-%02d-%02d", $year+1900, $mon+1, $mday);
+        unshift @stack, from_ymd($yyyymmdd);
+    }
+
     elsif ($word eq 'vars') {
         show_vars();
     }
@@ -725,6 +764,13 @@ sub evaluate {
         };
     }
 
+    elsif ($word eq 'ymd') {
+        check_numeric($word, 1) and do {
+            print to_ymd($stack[0]), "\n";
+            $inhibit_dump = 1;
+        };
+    }
+
     elsif ($word eq 'comma') {
         check_numeric($word, 1) and do {
             print add_commas($stack[0]), "\n";
@@ -793,6 +839,10 @@ sub evaluate {
 
     elsif (is_hms($word)) {
         unshift @stack, from_hms($word);
+    }
+
+    elsif (is_ymd($word)) {
+        unshift @stack, from_ymd($word);
     }
 
     elsif (is_hex($word)) {
@@ -1179,6 +1229,14 @@ Square root
 Current time in minutes since midnight
 
 B<hhmm hms> shows the time in human-readable form
+
+=item B<today>
+
+Current date in days (1970-01-01 is day 0)
+
+=item B<ymd>
+
+Display TOS, a day number, in YYYY-MM-DD format
 
 =item B<vars>
 

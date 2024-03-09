@@ -198,6 +198,14 @@ Multiple command may be entered on a line.
 
     **hhmm hms** shows the time in human-readable form
 
+- **today**
+
+    Current date in days (1970-01-01 is day 0)
+
+- **ymd**
+
+    Display TOS, a day number, in YYYY-MM-DD format
+
 - **vars**
 
     Show all variables
