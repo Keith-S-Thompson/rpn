@@ -20,6 +20,8 @@
 use strict;
 use warnings;
 
+use open qw( :utf8 :std );
+
 while (<>) {
     if (/^use feature 'signatures';$/ or
         /^no warnings 'experimental::signatures';$/)
