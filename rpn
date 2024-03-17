@@ -832,6 +832,8 @@ sub evaluate($word) {
     }
 
     elsif (is_hex($word)) {
+        # Inhibit "Hexadecimal number > 0xffffffff non-portable" warning
+        no warnings 'portable';
         unshift @stack, hex $word;
     }
 
