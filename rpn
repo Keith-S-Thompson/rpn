@@ -714,7 +714,10 @@ sub evaluate($word) {
 
     elsif ($word eq '.') {
         check($word, 1) and do {
-            if ($hex_mode) {
+            if (ref $stack[0] eq 'SCALAR') {
+                print "${$stack[0]}\n";
+            }
+            elsif ($hex_mode) {
                 printf "0x%x\n", int $stack[0];
             }
             else {
