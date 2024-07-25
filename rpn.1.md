@@ -83,6 +83,10 @@ Multiple command may be entered on a line.
 
     Arithmetic operators
 
+- **//**
+
+    Integer division
+
 - **--**
 
     Negate

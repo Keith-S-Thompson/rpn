@@ -301,6 +301,7 @@ sub help() {
     B:<number>        : Push a BigFloat on the stack
     <num>_<unit>      : num * unit, where <unit> can be any variable name
     +, -, *, /, %, ** : arithmetic operators
+    //                : integer division
     --                : negate
     1/                : reciprocal
     %%                : / and %
@@ -480,6 +481,14 @@ sub evaluate($word) {
 
     elsif ($word eq '/') {
         check_numeric($word, 2) and do {
+            $stack[1] /= $stack[0];
+            shift @stack;
+        };
+    }
+
+    elsif ($word eq '//') {
+        check_numeric($word, 2) and do {
+            use integer;
             $stack[1] /= $stack[0];
             shift @stack;
         };
@@ -1097,6 +1106,10 @@ stack as a string.
 =item B<+, -, *, /, %, **>
 
 Arithmetic operators
+
+=item B<//>
+
+Integer division
 
 =item B<-->
 
