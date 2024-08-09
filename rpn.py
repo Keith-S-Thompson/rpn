@@ -131,6 +131,14 @@ def process_word(word):
     elif word == "clear":
         stack = []
 
+    elif word == "hex":
+        if len(stack) < 1:
+            print(f"{word} error: requires 1 argument")
+        elif type(stack[0]) == int or type(stack[0]) == float:
+            print(hex(int(stack[0])))
+        else:
+            print(f"{word} error: requires a numeric argument")
+
     elif word == "e":
         stack.insert(0, math.e)
 
