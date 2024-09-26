@@ -1,6 +1,6 @@
 # rpn - A text-mode RPN calculator
 
-**NOTE**: Since "calc" is a very common name, I've changed the name
+**NOTE**: Since "calc" is a very common name, I changed the name
 of this program from "calc" to "rpn".  If you're seeing this via the
 GitHub link
 [https://github.com/Keith-S-Thompson/calc](https://github.com/Keith-S-Thompson/calc)

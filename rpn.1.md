@@ -289,6 +289,10 @@ Multiple command may be entered on a line.
 
     Evaluate Perl expression (no whitespace)
 
+- **{ ... }**
+
+    Evaluate Perl expression
+
 # PREDEFINED VARIABLES
 
 - **pi**

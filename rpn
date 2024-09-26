@@ -348,6 +348,7 @@ sub help() {
     \                 : inhibit stack dump
     : ...             : Evaluate Perl expression (one line only)
     (...)             : Evaluate Perl expression (no whitespace)
+    { ... }           : Evaluate Perl expression
 EOF
 #   print "    ...          : continue (used on command line)"
 }
@@ -385,10 +386,27 @@ sub check_numeric($word, $count) {
 sub evaluate($word) {
     my $tmp;
     my $tmp2;
+    our $expr_mode;
+    our @expr;
 
     debug("DEBUG: evaluate \"$word\"\n");
 
-    if ($word eq 'dup') {
+    if (not $expr_mode and $word eq '{') {
+        $expr_mode = 1;
+    }
+
+    elsif ($expr_mode) {
+        if ($word eq '}') {
+            $expr_mode = 0;
+            unshift @stack, eval "@expr";
+            @expr = ();
+        }
+        else {
+            push @expr, $word;
+        }
+    }
+
+    elsif ($word eq 'dup') {
         check($word, 1) and unshift @stack, $stack[0];
     }
 
@@ -1312,6 +1330,10 @@ Evaluate Perl expression (one line only)
 =item B<(...)>
 
 Evaluate Perl expression (no whitespace)
+
+=item B<{ ... }>
+
+Evaluate Perl expression
 
 =back
 
