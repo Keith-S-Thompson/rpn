@@ -17,8 +17,10 @@ rpn \[options\]
 
 **rpn** (formerly called **calc**) is a text-mode RPN calculator
 
-Operands and commands may be entered as text or as command-line arguments.
-Multiple command may be entered on a line.
+Operands and commands may be entered as text or as command-line
+arguments.  Multiple command may be entered on a line.  Unrecognized
+command-line options are treated as ordinary arguments, allowing for
+uses like "`rpn -2 -- 4 + .`".
 
 # OPTIONS
 

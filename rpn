@@ -43,7 +43,7 @@ use warnings;
 use feature 'signatures';
 no warnings 'experimental::signatures';
 
-use Getopt::Long ();
+use Getopt::Long qw(:config posix_default pass_through);
 use Pod::Usage ();
 
 eval 'use Math::BigInt';
@@ -1053,8 +1053,10 @@ rpn [options]
 
 B<rpn> (formerly called B<calc>) is a text-mode RPN calculator
 
-Operands and commands may be entered as text or as command-line arguments.
-Multiple command may be entered on a line.
+Operands and commands may be entered as text or as command-line
+arguments.  Multiple command may be entered on a line.  Unrecognized
+command-line options are treated as ordinary arguments, allowing for
+uses like "C<rpn -2 -- 4 + .>".
 
 =head1 OPTIONS
 

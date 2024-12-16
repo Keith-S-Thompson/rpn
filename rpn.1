@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "RPN 1"
-.TH RPN 1 "2024-09-26" "perl v5.34.0" "User Contributed Perl Documentation"
+.TH RPN 1 "2024-12-16" "perl v5.34.0" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -156,8 +156,10 @@ rpn [options]
 .IX Header "DESCRIPTION"
 \&\fBrpn\fR (formerly called \fBcalc\fR) is a text-mode \s-1RPN\s0 calculator
 .PP
-Operands and commands may be entered as text or as command-line arguments.
-Multiple command may be entered on a line.
+Operands and commands may be entered as text or as command-line
+arguments.  Multiple command may be entered on a line.  Unrecognized
+command-line options are treated as ordinary arguments, allowing for
+uses like "\f(CW\*(C`rpn \-2 \-\- 4 + .\*(C'\fR".
 .SH "OPTIONS"
 .IX Header "OPTIONS"
 .IP "\fB\-help\fR, \fB\-help1\fR, \fB\-help2\fR" 4
