@@ -2,7 +2,7 @@
 
 # nosig: Translate Perl code that uses signatures to Perl code that doesn't.
 
-# Signatures were introduced in Perl 5.20
+# Signatures were introduced in Perl 5.20, released 2014-05-27.
 # This script is not intended to be general-purpose.
 # ("Only perl can parse Perl")
 # This version handles the "rpn" script.
