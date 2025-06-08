@@ -64,7 +64,8 @@ uses like "`rpn -2 -- 4 + .`".
 
 - **num:num:...**
 
-    Push a number in HH:MM:SS format (base 60)
+    Push a number in HH:MM:SS format (base 60); '.' can be used for
+    fractional values.
 
 - **I:number**
 

@@ -212,18 +212,37 @@ sub is_numeric($arg) {
     }
 }
 
-sub is_hms($word) {
-    return $word =~ /^(\d+:)+\d+$/;
-}
-
 sub from_hms($word) {
-    my @fields;
+    my($prefix, $suffix) = ($word =~ /^([^.]*)\.([^.]*)$/);
+    if (not defined $suffix) {
+        $prefix = $word;
+        $suffix = "";
+    }
+    my $prefix_is_decimal = ($prefix =~ /^\d*$/);
+    my $suffix_is_decimal = ($suffix =~ /^\d*$/);
+    my $prefix_is_hms = ($prefix =~ /^(\d+:)+\d+$/);
+    my $suffix_is_hms = ($suffix =~ /^(\d+:)+\d+$/);
+    if (not ($prefix_is_decimal and $suffix_is_hms
+             or
+             $prefix_is_hms     and $suffix_is_decimal
+             or
+             $prefix_is_hms     and $suffix_is_hms))
+    {
+        return undef;
+    }
+
+    my @prefix_fields = split /:/, $prefix;
+    my @suffix_fields = split /:/, $suffix;
+
     my $result = 0;
 
-    @fields = split /:/, $word;
-
-    foreach my $field (@fields) {
+    foreach my $field (@prefix_fields) {
         $result = $result * 60 + $field;
+    }
+    my $divisor = 60;
+    foreach my $field (@suffix_fields) {
+        $result += $field / $divisor;
+        $divisor *= 60;
     }
     return $result;
 }
@@ -853,8 +872,9 @@ sub evaluate($word) {
         unshift @stack, $tmp * $variables{$tmp2};
     }
 
-    elsif (is_hms($word)) {
-        unshift @stack, from_hms($word);
+    elsif (defined (my $value = from_hms($word))) {
+        # unshift @stack, from_hms($word);
+        unshift @stack, $value;
     }
 
     elsif (is_ymd($word)) {
@@ -1106,7 +1126,8 @@ The number may be integer (decimal or hexadecimal) or floating-point.
 
 =item B<num:num:...>
 
-Push a number in HH:MM:SS format (base 60)
+Push a number in HH:MM:SS format (base 60); '.' can be used for
+fractional values.
 
 =item B<I:number>
 
