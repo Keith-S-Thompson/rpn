@@ -22,6 +22,11 @@ ifeq ($(strip $(PREFIX)),)
 	$(error PREFIX is not set)
 endif
 
+# TODO: Consider making `rpn` a symlink to  `rpn_nosig` if Perl
+#       doesn't support signatures.  Signatures have been
+#       available since Perl 5.20 2014-05-27, so this probably
+#       isn't worth doing.
+
 install: prefix_is_defined all
 	$(info Installing in $(PREFIX))
 	mkdir -p $(PREFIX)/bin $(PREFIX)/share/man/man1
